@@ -1,0 +1,106 @@
+<html>
+  <head>
+    <title>Universal Skin Management System</title>
+	<script src="http://libs.baidu.com/jquery/2.0.3/jquery.min.js"></script>
+	<script src="/static/ajaxfileupload.js"></script>
+    <style type="text/css">
+	
+    </style>
+	<script type="text/javascript">
+
+	
+	$(document).ready(function(){
+		refresh=(function(){
+			var token=$("#token").val()
+			$.ajax({
+				url: "/data",
+				type: "POST",
+				data: {"token": token},
+				dataType: "json",
+				success: function(data,stat){
+					var str="";
+					str+="User Name:"+data.player_name+"<br/>";
+					str+="User UUID:"+data.uuid+"<br/>";
+					str+="User Preference:"+data.model_preference.join("|")+"<br/>";
+					for (var model in data.models){
+						str+="<a href=\""+data.models[model]+"\">"+model+"</a></br>"
+					}
+					$("#userinfo").html(str);
+				}
+			});
+		});
+		
+		$("#reg").click(function(){
+			var login_name=$("#login").val()
+			var login_pwd=$("#pwd").val()
+			$.ajax({
+				url: "/reg",
+				type: "POST",
+				data: {
+					"login": login_name,
+					"passwd": login_pwd
+				},
+				dataType: "json",
+				success: function(data,stat){
+					alert(data.msg);
+				}
+			});
+		});
+		$("#doLogin").click(function(){
+			var login_name=$("#login").val()
+			var login_pwd=$("#pwd").val()
+			$.ajax({
+				url: "/login",
+				type: "POST",
+				data: {
+					"login": login_name,
+					"passwd": login_pwd
+				},
+				dataType: "json",
+				success: function(data,stat){
+					if (data.errno!=0){
+						alert(data.msg);
+					}else{
+						$("#token").val(data.msg)
+						refresh()
+					}
+				}
+			});
+		});
+		
+		uploadFile=function(){
+			$.ajaxFileUpload({
+				url: "/upload",
+				secureurl: false,
+				fileElementId: "file",
+				dataType: "json",
+				success: function(data,stat){
+					alert(data.msg)
+				}
+			})
+		};
+	});
+	</script>
+  </head>
+  <body>
+    <div id="main-div">
+      <table>
+        <tr><td>Login:</td><td> <input type="text" id="login" /></td></tr>
+		<tr><td>Passwd:</td><td><input type="password" id="pwd"/></td></tr>
+		<tr><td><input type="button" id="reg" value="Register"></td><td>
+			    <input type="button" id="doLogin" value="Login"></td></tr>
+	  </table>
+    </div>
+	<div id="main-div2">
+		<div id="userinfo"></div>
+		  <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="radio" name="type" value="alex">Alex<br/>
+			<input type="radio" name="type" value="steve">Steve<br/>
+			<input type="radio" name="type" value="cape">Cape<br/>
+		    <input type="hidden" name="token" id="token" value=""><br/>
+			<input type="file" name="file" id="file"/><br/>
+            <input type="button" value="Upload" onclick="return uploadFile()"/><br/>
+		  </form>
+	</div>
+  </body>
+</html>
