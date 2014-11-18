@@ -1,0 +1,68 @@
+===== APIs for UniSkinServer Web management ======
+
+Register:
+	/reg
+	POST: LOGIN={username}&PASSWD={password}
+	RETN: {"errno":0,"msg":"success"}
+	      1: already registered
+		  2: passwd not satisfied request(too short)
+		  3: invalid name or passwd
+
+Login:
+	/login
+	POST: same as register
+	RETN: {"errno":0,"msg":"{sessionToken}"}
+	      1: invalid login
+		  2: attempt blocked
+
+Change Password & UUID:
+	/update
+	POST: login=
+	      current_passwd=
+		  new_passwd=
+		  token=
+		  uuid=
+		  preferance={model1|model2}
+
+Get Full User Data:
+	/data?token={sessionToken}
+	GET:
+	RETN:
+	{
+		"playerName": {string},
+		"uuid": {string},
+		"preferance": {string|string},
+		"urls":{  //start with '#'means disabled
+			"alex": {texture link},
+			"steve": {},
+			"cape": {}
+		}
+	}
+
+
+Upload:
+	/upload
+	POST: token=
+	      type=steve|alex|cape
+		  file=
+	will overwrite existing file
+
+	DEL: token=
+	     type=
+
+if errno==-1:
+	invalid sessionToken
+
+========= Inner Pickle Data Structure ======
+{
+	"Player1": {
+		"uuid": "STRING",
+		"pwd": {SHA-512(sha1(real_pwd)+sha1("Player1"))}
+		"models":{
+			"alex": SHA256 Hash
+			"steve": sha256Hash
+			"cape": sha256Hash
+		}
+		Perference: ["steve","alex"]
+	}
+}
