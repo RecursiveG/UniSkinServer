@@ -1,7 +1,7 @@
 ## 根地址
-根地址是每个URL请求的开始部分，每个请求的URL均由
-根地址与Endpoint连接而成，根地址也唯一地标识了一台服务器
-所有请求都是不带参数的GET请求
+根地址是每个URL请求的开始部分，每个请求的URL均由  
+根地址与Endpoint连接而成，根地址也唯一地标识了一台服务器  
+所有请求都是不带参数的GET请求  
 假设一个服务器的根地址是
 
     http://127.0.0.1:8000/skinserver/
@@ -42,8 +42,8 @@ Endpoints:
 - 200: 返回材质文件
 - 404: 材质未找到
 
-唯一标识符应当与文件一一对应
-我推荐使用文件的SHA-256作为唯一标识符
+唯一标识符应当与文件一一对应  
+我推荐使用文件的SHA-256作为唯一标识符  
 扩展名是可选的，通常是`.png`
 
 ## 获得玩家信息:
@@ -68,8 +68,6 @@ Endpoint:
 - 404: 该玩家不存在
 - 400: UUID校验失败
 
-（）
-
 ## UserProfile:
 UserProfile代表了一个玩家的信息
 
@@ -88,10 +86,10 @@ UserProfile代表了一个玩家的信息
       "player_name": "XiaoMing",
       "last_update": 1416300800,
       "uuid": "b6e152724b02462dbafcfe1573c8d6cc",
-      "model_preference": ["alex","steve"],
+      "model_preference": ["slim","default"],
       "skins": {
-        "alex": "67cbc70720c4666e9a12384d041313c7bb9154630d7647eb1e8fba0c461275c6",
-        "steve": "6d342582972c5465b5771033ccc19f847a340b76d6131129666299eb2d6ce66e"
+        "alim": "67cbc70720c4666e9a12384d041313c7bb9154630d7647eb1e8fba0c461275c6",
+        "default": "6d342582972c5465b5771033ccc19f847a340b76d6131129666299eb2d6ce66e"
       }
       "cape": "970a71c6a4fc81e83ae22c181703558d9346e0566390f06fb93d09fcc9783799"
     }
