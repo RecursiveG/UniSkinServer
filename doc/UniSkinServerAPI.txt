@@ -66,3 +66,15 @@ if errno==-1:
 		Perference: ["steve","alex"]
 	}
 }
+
+CREATE TABLE IF NOT EXISTS users(
+	email TEXT NOT NULL PRIMARY KEY UNIQUE,
+	pwd   TEXT NOT NULL,
+	uuid  TEXT NOT NULL UNIQUE,
+	name  TEXT NOT NULL UNIQUE,
+	last_mod   INT NOT NULL,
+	preference TEXT,
+	HASH_alex  TEXT,
+	HASH_steve TEXT,
+	HASH_cape  TEXT
+);

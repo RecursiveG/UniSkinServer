@@ -9,111 +9,146 @@ DEFAULT_CONFIG='''{
     "allow-cape": true
 }
 '''
-URL_PREFIX='http://localhost:10086'
+import uuid,sqlite3,os,sys,json,time
+
 
 def getUUID():
-    import uuid
     return str(uuid.uuid4()).replace('-','')
-        
-from time import time
+
 class SessionManager():
     def __init__(self):
         self.__sessions=dict()
     def valid(self,token):
-        return token in self.__sessions and self.__sessions[token]['time']<time()
+        return token in self.__sessions and self.__sessions[token]['time']<time.time()
     def get_name(self,token):
         return self.__sessions[token]['name'] if self.valid(token) else None
     def login(self,name):
         uid=getUUID()
-        i={'name':name,'time':time()}
+        i={'name':name,'time':time.time()}
         self.__sessions[uid]=i
         return uid
-        
-import hashlib,json
-class UserInfo():
-    def __hash_pwd(self,pwd):
+
+class UserInfoFactory():
+    def toPublicProfile(record):
+        import json
+        obj=dict(player_name=record[0],last_update=record[3],uuid=record[1])
+        if record[4]!=None:
+            obj["model_preference"]=record[4].split('|')
+        else:
+            obj["model_preference"]=list('default','slim')
+        if record[7]!=None:
+            obj["cape"]=record[7]
+        skins=dict()
+        if record[6]!=None:
+            skins["default"]=record[6]
+        if record[5]!=None:
+            skins["slim"]=record[5]
+        obj['skins']=skins
+        return json.dumps(obj)
+    def toWebProfile(rec):
+        import json
+        models=dict()
+        if rec[5]!=None: models['slim']=rec[5]
+        if rec[6]!=None: models['default']=rec[6]
+        if rec[7]!=None: models['cape']=rec[7]
+        obj=dict(player_name=rec[0],uuid=rec[1],model_preference=rec[4].split('|'),models=models)
+        return json.dumps(obj)
+
+    def pwd_hash(name,pwd):
+        import hashlib
         m1=hashlib.sha1()
         m2=hashlib.sha1()
         m3=hashlib.sha512()
-        m1.update(self.name.encode("utf8"))
+        m1.update(name.encode("utf8"))
         m2.update(pwd.encode("utf8"))
         m3.update(m1.digest())
         m3.update(m2.digest())
         return m3.hexdigest()
-    def __init__(self,name,pwd):
-        self.name=name;
-        self.pwd=self.__hash_pwd(pwd)
-        self.preference=["steve","alex"]
-        self.models=dict(steve="",alex="",cape="")
-        self.uid=getUUID()
-    def getLegacySkin(self):
-        if self.models['steve']=="":
-            return ""
-        else:
-            return "%s/textures/%s.png"%(URL_PREFIX,self.models['steve'])
-    def getLegacyCape(self):
-        if self.models['cape']=="":
-            return ""
-        else:
-            return "%s/textures/%s.png"%(URL_PREFIX,self.models['cape'])
-    def uuid_match(self,uid):
-        return self.uid.lower()==uid.lower()
-    def passwd_match(self,pwd):
-        return self.pwd==self.__hash_pwd(pwd)
-        
-    def toJson(self):
-        l=dict()
-        for key in self.models:
-            if(self.models[key]!=""):
-                l[key]="%s/textures/%s.png"%(URL_PREFIX,self.models[key])
-        d=dict(player_name=self.name,last_update=time(),uuid=self.uid,model_preference=self.preference,models=l)
-        return json.dumps(d)
-    def get_web_data(self):
-        return self.toJson()
-        
-    def update_uuid(self,uuid):
-        uid=uuid.replace('-','').lower()
-        if len(uid)!=32:
-            raise Exception("UUID Length not match")
-        self.uid=uid
-    def update_prefer(self,p):
-        prefer=p.split('|')
-        default_prefer=['steve','alex']
-        fin=[x for x in prefer if x in default_prefer]
-        for x in default_prefer:
-            if not x in fin:
-                fin.append(x)
-        self.preference=fin
-    def chpwd(self,login,cur,pwd):
-        if self.name==login and self.passwd_match(cur):
-            self.pwd=self.__hash_pwd(pwd)
-            return True
-        else:
-            return False
-    def update_model(self,model,hash_name):
-        if model in self.models:
-            self.models[model]=hash_name
-            
-import pickle
-class user_data:
-    def __init__(self,data_file_path):
-        self.__data=pickle.load(open(data_file_path,"rb"))
-        self.__data_path=data_file_path
-        
-    def exists(self,player_name):
-        return player_name in self.__data
-        
-    def get(self,name):
-        return self.__data[name]
 
+class DatabaseProvider():
+    ''' sqlite3 database backend '''
+    def __init__(self,file_path):
+        CREATE_SQL='''CREATE TABLE IF NOT EXISTS users(
+          name  TEXT NOT NULL PRIMARY KEY UNIQUE,
+          uuid  TEXT NOT NULL UNIQUE,
+          pwd   TEXT NOT NULL,
+          last_update INT NOT NULL,
+          preference TEXT,
+          HASH_alex  TEXT,
+          HASH_steve TEXT,
+          HASH_cape  TEXT
+        );'''
+        if not os.path.exists(file_path):
+            conn=sqlite3.connect(file_path)
+            c=conn.cursor();
+            conn.execute(CREATE_SQL)
+            conn.commit()
+            conn.close()
+        self.__conn=sqlite3.connect(file_path)
+        self.__cursor=self.__conn.cursor()
+    def __getRecordByName(self,name):
+        SQL="SELECT * FROM users WHERE name=?"
+        return self.__cursor.execute(SQL,(name,)).fetchone()
+    def user_exists(self,name):
+        return self.__getRecordByName(name)!=None
+    def getLegacySkin(self,name):
+        res=self.__getRecordByName(name)
+        return None if res==None else res[6]
+    def getLegacyCape(self,name):
+        res=self.__getRecordByName(name)
+        return None if res==None else res[7]
+    def user_json(self,name):
+        u=self.__getRecordByName(name)
+        return UserInfoFactory.toPublicProfile(u)
     def new_user(self,name,pwd):
-        self.__data[name]=UserInfo(name,pwd)
-        
-    def sync(self):
-        pickle.dump(self.__data,open(self.__data_path,'wb'))
-        
+        SQL=r'INSERT INTO users VALUES(?,?,?,?,?,NULL,NULL,NULL)'
+        self.__cursor.execute(SQL,(name,getUUID(),UserInfoFactory.pwd_hash(name,pwd),int(time.time()),"default|slim"))
+        self.__conn.commit()
+    def isValid(self,name,pwd):
+        SQL="SELECT * FROM users WHERE name=? AND pwd=?"
+        res=self.__cursor.execute(SQL,(name,UserInfoFactory.pwd_hash(name,pwd),))
+        return res!=None;
+    def user_json_web(self,name):
+        rec=self.__getRecordByName(name)
+        return UserInfoFactory.toWebProfile(rec)
+    def remove_skin(self,name,skin_type):
+        SQL=r'UPDATE users SET %s=NULL, last_update=? WHERE name=?'
+        column=""
+        if skin_type=="slim": column="HASH_alex"
+        if skin_type=="default": column="HASH_steve"
+        if skin_type=="cape": column="HASH_cape"
+        if column=="":return
+        SQL=SQL%column
+        self.__cursor.execute(SQL,(int(time.time()),name))
+        self.__conn.commit()
+    def update_model(self,name,skin_type,hex_name):
+        SQL=r'UPDATE users SET %s=?, last_update=? WHERE name=?'
+        column=""
+        if skin_type=="slim": column="HASH_alex"
+        if skin_type=="default": column="HASH_steve"
+        if skin_type=="cape": column="HASH_cape"
+        if column=="":return
+        SQL=SQL%column
+        self.__cursor.execute(SQL,(hex_name,int(time.time()),name))
+        self.__conn.commit()
+    def change_pwd(self,name,pwd):
+        SQL="UPDATE users SET pwd=? WHERE name=?"
+        self.__cursor.execute(SQL,(UserInfoFactory.pwd_hash(name,pwd),name,))
+        self.__conn.commit()
+    def update_uuid(self,name,u):
+        SQL="UPDATE users SET uuid=?, last_update=? WHERE name=?"
+        self.__cursor.execute(SQL,(u,int(time.time()),name,))
+        self.__conn.commit()
+    def update_preference(self,name,p):
+        SQL="UPDATE users SET preference=?, last_update=? WHERE name=?"
+        self.__cursor.execute(SQL,(p,int(time.time()),name,))
+        self.__conn.commit()
+
+
+
 class server_config:
     def __init__(self,file_path):
+        import json
         f=open(file_path)
         config=json.loads(f.read())
         self.ip=config["bind-ip"]
@@ -127,7 +162,7 @@ class server_config:
         self.texture_path=config["texture-folder"]
         self.database_path=config["database"]
 
-        
+
 def getConfigure(file_path="server_config.json"):
     try:
         import os
@@ -136,9 +171,6 @@ def getConfigure(file_path="server_config.json"):
             f.write(DEFAULT_CONFIG)
             f.close()
         cfg=server_config(file_path)
-        if not os.path.exists(cfg.database_path):
-            pickle.dump(dict(),open(cfg.database_path,'wb'))
-        cfg.user_data=user_data(cfg.database_path)
     except Exception as e:
         print(e)
         return None

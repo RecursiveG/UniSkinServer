@@ -6,5 +6,5 @@
     "allow-reg": true,
     "allow-cape": true,
     "texture-folder": "textures/",
-    "database": "data.bin"
+    "database": "data.db"
 }

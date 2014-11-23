@@ -4,11 +4,11 @@
 	<script src="http://libs.baidu.com/jquery/2.0.3/jquery.min.js"></script>
 	<script src="/static/ajaxfileupload.js"></script>
     <style type="text/css">
-	
+
     </style>
 	<script type="text/javascript">
 
-	
+
 	$(document).ready(function(){
 		refresh=(function(){
 			var token=$("#token").val()
@@ -29,7 +29,7 @@
 				}
 			});
 		});
-		
+
 		$("#reg").click(function(){
 			var login_name=$("#login").val()
 			var login_pwd=$("#pwd").val()
@@ -67,12 +67,16 @@
 				}
 			});
 		});
-		
+
 		uploadFile=function(){
 			$.ajaxFileUpload({
 				url: "/upload",
 				secureurl: false,
 				fileElementId: "file",
+        data: {
+          "token": $("#token").val(),
+          "type": $('input:radio[name=type]:checked').val()
+        },
 				dataType: "json",
 				success: function(data,stat){
 					alert(data.msg)
@@ -94,8 +98,8 @@
 	<div id="main-div2">
 		<div id="userinfo"></div>
 		  <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="radio" name="type" value="alex">Alex<br/>
-			<input type="radio" name="type" value="steve">Steve<br/>
+            <input type="radio" name="type" value="slim">Alex<br/>
+			<input type="radio" name="type" value="default">Steve<br/>
 			<input type="radio" name="type" value="cape">Cape<br/>
 		    <input type="hidden" name="token" id="token" value=""><br/>
 			<input type="file" name="file" id="file"/><br/>
