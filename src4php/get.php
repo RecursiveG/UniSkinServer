@@ -1,5 +1,5 @@
-<?php
-$con = mysql_connect("localhost","username","password");
+<?php 
+require 'config.inc.php';
 if (!$con)
 {
 Header("HTTP/1.1 403 Forbidden");
@@ -14,17 +14,24 @@ if ($_GET['legacy']=='1') {
   Header("Location: http://skins.minecraft.net/Minecraft" . $_GET['type'] . "/" . filename . ".png");
   exit(0);
   }
-  switch ($_GET['type'])
-  {
+  if (!$row){
+    Header("HTTP/1.1 404 Not Found");
+    exit('{"errno": 4,"msg": "无可用皮肤"}');
+  }
+  switch ($_GET['type']) {
 case 'Skins':
   Header("HTTP/1.1 301 Found");
-  Header("Location: http://skins.minecraft.net/Minecraft" . $_GET['type'] . "/" . filename . ".png");
+  Header("Location: textures/" . $row['HASH_steve']);
   break;  
 case 'Cloaks':
-  code to be executed if expression = label2;
+  Header("HTTP/1.1 301 Found");
+  Header("Location: textures/" . $row['HASH_cape']);
   break;
 default:
-  Header("HTTP/1.1 403 Forbidden");
-  echo "some err code";
+  Header("HTTP/1.1 400 Bad Request");
+  echo '{"errno": 4,"msg": "Bad Request"}';
+  break;
+  }
+  exit(0);
 }
 ?>

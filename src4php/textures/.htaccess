@@ -1,0 +1,4 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME}.png -f
+RewriteRule ^([a-zA-Z_0-9]+)$ $1.png [L]
