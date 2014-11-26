@@ -35,7 +35,6 @@ Endpoints:
 Endpoints:
 
     /textures/{材质文件唯一标识符}
-    /textures/{材质文件唯一标识符}.{扩展名}
 
 返回值:
 
@@ -44,7 +43,6 @@ Endpoints:
 
 唯一标识符应当与文件一一对应  
 我推荐使用文件的SHA-256作为唯一标识符  
-扩展名是可选的，通常是`.png`
 
 ## 获得玩家信息:
 Endpoint:
