@@ -66,6 +66,8 @@ Endpoint:
 - 404: 该玩家不存在
 - 400: UUID校验失败
 
+**注意：**该形式连接存在意义不明，考虑移除
+
 ## UserProfile:
 UserProfile代表了一个玩家的信息
 
@@ -86,7 +88,7 @@ UserProfile代表了一个玩家的信息
       "uuid": "b6e152724b02462dbafcfe1573c8d6cc",
       "model_preference": ["slim","default"],
       "skins": {
-        "alim": "67cbc70720c4666e9a12384d041313c7bb9154630d7647eb1e8fba0c461275c6",
+        "slim": "67cbc70720c4666e9a12384d041313c7bb9154630d7647eb1e8fba0c461275c6",
         "default": "6d342582972c5465b5771033ccc19f847a340b76d6131129666299eb2d6ce66e"
       }
       "cape": "970a71c6a4fc81e83ae22c181703558d9346e0566390f06fb93d09fcc9783799"
