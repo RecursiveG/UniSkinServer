@@ -154,8 +154,7 @@ def run_server(cfg):
     global sessionManager
     handlers=[(r"/MinecraftSkins/(.*).png",  LegacySkinHandler),
               (r"/MinecraftCloaks/(.*).png", LegacyCapeHandler),
-              (r"/textures/(.*).png",        TexturesHandler),
-              (r"/textures/(.*)",            TexturesHandler),
+              (r"/textures/(.*)",            TexturesHandler,{"path":"textures"}),
               (r"/(.*).json",                UserProfileHandler),
 
               (r"/",               tornado.web.RedirectHandler,{"url": "/index.html"}),

@@ -10,6 +10,18 @@
 
 
 	$(document).ready(function(){
+    genPreferBtn=(function(pre,lis){
+      if(pre=="cape")return "";
+      s1='<input type="button" value="Prefer" onclick="return setPrefer(\'';
+      s2='\')">';
+      s3="";
+      if(pre=='slim')
+        s3="slim|default";
+      else
+        s3="default|slim";
+      return s1+s3+s2;
+    });
+
 		refresh=(function(){
 			var token=$("#token").val()
 			$.ajax({
@@ -23,12 +35,30 @@
 					str+="User UUID:"+data.uuid+"<br/>";
 					str+="User Preference:"+data.model_preference.join("|")+"<br/>";
 					for (var model in data.models){
-						str+="<a href=\""+data.models[model]+"\">"+model+"</a></br>"
+						str+=model+":<img src=\"textures\\"+data.models[model]+"\"/><input type=\"button\" value=\"Delete\" onclick='return removeModel(\""+model+"\")'>"+genPreferBtn(model,data.models)+"</br>"
 					}
 					$("#userinfo").html(str);
 				}
 			});
 		});
+
+    setPrefer=(function(prefer){
+      console.log("update prefer "+prefer);
+      var token=$("#token").val()
+      $.ajax({
+        url: "/update",
+        type: "POST",
+        data: {
+          "preference": prefer,
+          "token": token
+        },
+        dataType: "json",
+        success: function(data,stat){
+          alert(data.msg);
+          refresh();
+        }
+      });
+    });
 
 		$("#reg").click(function(){
 			var login_name=$("#login").val()
@@ -79,10 +109,29 @@
         },
 				dataType: "json",
 				success: function(data,stat){
-					alert(data.msg)
+					alert(data.msg);
+          refresh()
 				}
 			})
 		};
+
+    removeModel=function(modelName){
+      console.log("Model Remove "+modelName);
+      var token=$("#token").val()
+      $.ajax({
+        url: "/upload",
+        type: "DELETE",
+        data: {
+          "type": modelName,
+          "token": token
+        },
+        //dataType: "json",
+        success: function(data,stat){
+          alert(stat);
+          refresh();
+        }
+      });
+    }
 	});
 	</script>
   </head>
