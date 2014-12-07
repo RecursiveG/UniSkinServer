@@ -1,0 +1,105 @@
+#main-div{
+  width: 50%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.panel{
+  border: 1px solid transparent;
+  border-radius: 6px;
+  border-color: #ddd;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+  width: 30em;
+}
+
+.panel-head{
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-color: #ddd;
+  background-color: #F5F5F5;
+}
+
+.panel-title{
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+}
+
+.panel-body{
+  padding: 15px;
+  padding-bottom: 5px;
+}
+
+
+.panel-btn{
+  color: #333;
+  background-color: #fff;
+  display: inline-block;
+  margin-right: 15px;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  background-image: none;
+  border: 1px solid transparent;
+  border-color: #ccc;
+  border-radius: 4px;
+}
+
+.panel-line{
+  margin-bottom: 10px;
+  display: table;
+}
+
+.line-start{
+  white-space: nowrap;
+  margin-right: 0;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  color: #555;
+  text-align: center;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-right: 0;
+  border-radius: 4px 0 0 4px;
+  display: table-cell;
+  width: 1%;
+}
+
+.line-mid{
+  margin-right: 0;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  border: 1px solid #ccc;
+  border-right: 0;
+  display: table-cell;
+  width: 100%;
+}
+
+
+
+
+.line-end{
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  border: 1px solid #ccc;
+  border-radius: 0 4px 4px 0;
+  display: table-cell;
+  width: 100%;
+}
+
+.error-msg{
+  color: red;
+}

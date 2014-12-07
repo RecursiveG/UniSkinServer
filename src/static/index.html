@@ -1,159 +1,108 @@
 <html>
-  <head>
-    <title>Universal Skin Management System</title>
-	<script src="http://libs.baidu.com/jquery/2.0.3/jquery.min.js"></script>
-	<script src="/static/ajaxfileupload.js"></script>
-    <style type="text/css">
+<head>
+  <title>Universal Skin Management System</title>
+  <script src="http://libs.baidu.com/jquery/2.0.3/jquery.min.js"></script>
+  <script src="/static/ajaxfileupload.js"></script>
+  <script src="/static/scripts.js"></script>
+  <link rel="stylesheet" type="text/css" href="/static/style.css" />
+</head>
 
-    </style>
-	<script type="text/javascript">
-
-
-	$(document).ready(function(){
-    genPreferBtn=(function(pre,lis){
-      if(pre=="cape")return "";
-      s1='<input type="button" value="Prefer" onclick="return setPrefer(\'';
-      s2='\')">';
-      s3="";
-      if(pre=='slim')
-        s3="slim|default";
-      else
-        s3="default|slim";
-      return s1+s3+s2;
-    });
-
-		refresh=(function(){
-			var token=$("#token").val()
-			$.ajax({
-				url: "/data",
-				type: "POST",
-				data: {"token": token},
-				dataType: "json",
-				success: function(data,stat){
-					var str="";
-					str+="User Name:"+data.player_name+"<br/>";
-					str+="User UUID:"+data.uuid+"<br/>";
-					str+="User Preference:"+data.model_preference.join("|")+"<br/>";
-					for (var model in data.models){
-						str+=model+":<img src=\"textures\\"+data.models[model]+"\"/><input type=\"button\" value=\"Delete\" onclick='return removeModel(\""+model+"\")'>"+genPreferBtn(model,data.models)+"</br>"
-					}
-					$("#userinfo").html(str);
-				}
-			});
-		});
-
-    setPrefer=(function(prefer){
-      console.log("update prefer "+prefer);
-      var token=$("#token").val()
-      $.ajax({
-        url: "/update",
-        type: "POST",
-        data: {
-          "preference": prefer,
-          "token": token
-        },
-        dataType: "json",
-        success: function(data,stat){
-          alert(data.msg);
-          refresh();
-        }
-      });
-    });
-
-		$("#reg").click(function(){
-			var login_name=$("#login").val()
-			var login_pwd=$("#pwd").val()
-			$.ajax({
-				url: "/reg",
-				type: "POST",
-				data: {
-					"login": login_name,
-					"passwd": login_pwd
-				},
-				dataType: "json",
-				success: function(data,stat){
-					alert(data.msg);
-				}
-			});
-		});
-		$("#doLogin").click(function(){
-			var login_name=$("#login").val()
-			var login_pwd=$("#pwd").val()
-			$.ajax({
-				url: "/login",
-				type: "POST",
-				data: {
-					"login": login_name,
-					"passwd": login_pwd
-				},
-				dataType: "json",
-				success: function(data,stat){
-					if (data.errno!=0){
-						alert(data.msg);
-					}else{
-						$("#token").val(data.msg)
-						refresh()
-					}
-				}
-			});
-		});
-
-		uploadFile=function(){
-			$.ajaxFileUpload({
-				url: "/upload",
-				secureurl: false,
-				fileElementId: "file",
-        data: {
-          "token": $("#token").val(),
-          "type": $('input:radio[name=type]:checked').val()
-        },
-				dataType: "json",
-				success: function(data,stat){
-					alert(data.msg);
-          refresh()
-				}
-			})
-		};
-
-    removeModel=function(modelName){
-      console.log("Model Remove "+modelName);
-      var token=$("#token").val()
-      $.ajax({
-        url: "/upload",
-        type: "DELETE",
-        data: {
-          "type": modelName,
-          "token": token
-        },
-        //dataType: "json",
-        success: function(data,stat){
-          alert(stat);
-          refresh();
-        }
-      });
-    }
-	});
-	</script>
-  </head>
-  <body>
-    <div id="main-div">
-      <table>
-        <tr><td>Login:</td><td> <input type="text" id="login" /></td></tr>
-		<tr><td>Passwd:</td><td><input type="password" id="pwd"/></td></tr>
-		<tr><td><input type="button" id="reg" value="Register"></td><td>
-			    <input type="button" id="doLogin" value="Login"></td></tr>
-	  </table>
+<body>
+  <div id="main-div">
+    <h1>Universal Skin Server</h1>
+    <div id="login-div" class="panel">
+      <div class="panel-head">
+        <h3 class="panel-title">Register and Login</h3>
+      </div>
+      <div class="panel-body">
+        <div class="panel-line">
+          <span class="line-start">Login</span>
+          <input type="text" id="loginname" class="line-end" />
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Password</span>
+          <input type="password" id="pwd" class="line-end" />
+        </div>
+        <div class="panel-line">
+          <input class="panel-btn" type="button" id="regBtn" value="Register" />
+          <input class="panel-btn" type="button" id="logBtn" value="Login" />
+          <span class="error-msg" id="login-error"></span>
+        </div>
+      </div>
     </div>
-	<div id="main-div2">
-		<div id="userinfo"></div>
-		  <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="radio" name="type" value="slim">Alex<br/>
-			<input type="radio" name="type" value="default">Steve<br/>
-			<input type="radio" name="type" value="cape">Cape<br/>
-		    <input type="hidden" name="token" id="token" value=""><br/>
-			<input type="file" name="file" id="file"/><br/>
-            <input type="button" value="Upload" onclick="return uploadFile()"/><br/>
-		  </form>
-	</div>
-  </body>
+
+    <div id="info-div" class="panel" style="display: none;">
+      <div class="panel-head">
+        <h3 class="panel-title">Basic Information</h3>
+      </div>
+      <div class="panel-body">
+        <div class="panel-line">
+          <span class="line-start">Player Name</span>
+          <span class="line-end" id="playername"></span>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">UUID</span>
+          <span class="line-end" id="playeruuid"></span>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Steve Model</span>
+          <span class="line-mid" id="Stevemodel">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="removeSteveModel" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="uploadSteveModel" value="Upload"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Alex Model</span>
+          <span class="line-mid" id="Alexmodel">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="removeAlexModel" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="uploadAlexModel" value="Upload"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Cape</span>
+          <span class="line-mid" id="Capemodel">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="removeCapeModel" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="uploadCapeModel" value="Upload"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Prefered Model</span>
+          <span class="line-mid" id="preferedmodel">Alex</span>
+          <input class="panel-btn line-end" type="button" id="switchPreferedModel" value="Switch"/>
+        </div>
+      </div>
+    </div>
+
+    <div id="img-div" class="panel" style="display: none;">
+      <div class="panel-head">
+        <h3 class="panel-title">Texture Preview</h3>
+      </div>
+      <div class="panel-body">
+        <img id="preview-img" src="" />
+      </div>
+    </div>
+
+    <div id="manage-div" class="panel" style="display: none;">
+      <div class="panel-head">
+        <h3 class="panel-title">Account Management</h3>
+      </div>
+      <div class="panel-body">
+        <div class="panel-line">
+          <span class="line-start">Current Password</span>
+          <input type="password" id="currentpwd" class="line-end" />
+        </div>
+        <div class="panel-line">
+          <span class="line-start">New Password</span>
+          <input type="password" id="newpassword" class="line-end" />
+        </div>
+        <div class="panel-line">
+          <input class="panel-btn" type="button" id="changepasswd" value="Change Password" />
+          <input class="panel-btn" type="button" id="deleteaccount" value="Delete Account" />
+          <input class="panel-btn" type="button" id="logout" value="Logout" />
+        </div>
+        <div class="panel-line">
+          <span class="error-msg" id="mgr-error"></span>
+        </div>
+      </div>
+    </div>
+    <input type="file" name='file' id='filechoose' style="display: none;"/>
+  </div>
+</body>
 </html>

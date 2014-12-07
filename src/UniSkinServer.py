@@ -4,6 +4,13 @@ import server_config
 import tornado.web
 from tornado.web import RequestHandler
 
+def ArgHelper (handler,arg,default=None):
+  try:
+    x=handler.get_argument(arg)
+  except tornado.web.MissingArgumentError:
+    x=default
+  return x
+
 class LegacySkinHandler(RequestHandler):
     def get(self,player_name):
         if not db.user_exists(player_name):
@@ -63,6 +70,18 @@ class WebRegisterHandler(RequestHandler):
             self.write('{"errno":3,"msg":"Internal Server Error"}')
             return
         self.write('{"errno":0,"msg":""}')
+    def delete(self):
+        token=self.get_argument("token")
+        if not sessionManager.valid(token):
+            self.write('{"errno":-1,"msg":"invalid token"}')
+        else:
+            pwd=ArgHelper(self,"pwd")
+            name=sessionManager.get_name(token)
+            if db.isValid(name,pwd):
+                db.rm_account(name)
+                self.write('{"errno":0,"msg":""}')
+            else:
+                self.write('{"errno":2,"msg":"password change verification fail"}')
 
 class WebLoginHandler(RequestHandler):
     def post(self):
@@ -74,27 +93,28 @@ class WebLoginHandler(RequestHandler):
             token=sessionManager.login(name)
             self.write('{"errno":0,"msg":"%s"}'%token)
 
+class WebLogoutHandler(RequestHandler):
+    def post(self):
+        token=self.get_argument("token")
+        success=sessionManager.logout(token)
+        if not success:
+            self.write('{"errno":1,"msg":"logout fail"}')
+        else:
+            self.write('{"errno":0,"msg":""}')
+
 class WebDataAccessHandler(RequestHandler):
     def post(self):
         token=self.get_argument("token")
         if not sessionManager.valid(token):
-            self.set_status(403)
             self.write('{"errno":-1,"msg":"invalid token"}')
         else:
             name=sessionManager.get_name(token)
             self.write(db.user_json_web(name))
-def ArgHelper (handler,arg,default=None):
-    try:
-        x=handler.get_argument(arg)
-    except tornado.web.MissingArgumentError:
-        x=default
-    return x
 
 class WebProfileUpdateHandler(RequestHandler):
     def post(self):
         token=self.get_argument("token")
         if not sessionManager.valid(token):
-            self.set_status(403)
             self.write('{"errno":-1,"msg":"invalid token"}')
         else:
             name=sessionManager.get_name(token)
@@ -108,7 +128,7 @@ class WebProfileUpdateHandler(RequestHandler):
                     self.write('{"errno":1,"msg":"change password need current password"}')
                     return
                 if db.isValid(name,cur):
-                    db.change_pwd(name,pwd)
+                    db.change_pwd(name,new_pass)
                     updated_item.append("password")
                 else:
                     self.write('{"errno":2,"msg":"password change verification fail"}')
@@ -164,6 +184,7 @@ def run_server(cfg):
 
               (r"/reg",   WebRegisterHandler),
               (r"/login", WebLoginHandler),
+              (r"/logout", WebLogoutHandler),
               (r"/update",WebProfileUpdateHandler),
               (r"/data",  WebDataAccessHandler),
               (r"/upload",WebSkinModificationHandle),

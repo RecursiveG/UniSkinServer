@@ -27,6 +27,12 @@ class SessionManager():
         i={'name':name,'time':time.time()}
         self.__sessions[uid]=i
         return uid
+    def logout(self,token):
+        if token in self.__sessions:
+            del(self.__sessions[token])
+            return True
+        else:
+            return False
 
 class UserInfoFactory():
     def toPublicProfile(record):
@@ -107,7 +113,7 @@ class DatabaseProvider():
     def isValid(self,name,pwd):
         SQL="SELECT * FROM users WHERE name=? AND pwd=?"
         res=self.__cursor.execute(SQL,(name,UserInfoFactory.pwd_hash(name,pwd),))
-        return res!=None;
+        return res.fetchone()!=None;
     def user_json_web(self,name):
         rec=self.__getRecordByName(name)
         return UserInfoFactory.toWebProfile(rec)
@@ -142,6 +148,10 @@ class DatabaseProvider():
     def update_preference(self,name,p):
         SQL="UPDATE users SET preference=?, last_update=? WHERE name=?"
         self.__cursor.execute(SQL,(p,int(time.time()),name,))
+        self.__conn.commit()
+    def rm_account(self,name):
+        SQL="DELETE FROM users WHERE name=?"
+        self.__cursor.execute(SQL,(name,))
         self.__conn.commit()
 
 
