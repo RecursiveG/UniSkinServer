@@ -1,12 +1,11 @@
 # -*- coding : utf-8 -*-
 
 DEFAULT_CONFIG='''{
-    "bind-ip": "0.0.0.0",
     "port": "10086",
-    "admin-phrase": "badabada",
     "uuid-bind": false,
     "allow-reg": true,
-    "allow-cape": true
+    "texture-folder": "textures/",
+    "database": "data.db"
 }
 '''
 import uuid,sqlite3,os,sys,json,time
@@ -65,8 +64,8 @@ class TextureManager():
         if self.__textures[h]==0:
             del(self.__textures[h])
             os.remove(self.__path+h)
-        
-        
+
+
 class UserInfoFactory():
     def toPublicProfile(record):
         import json
@@ -199,14 +198,9 @@ class server_config:
         import json
         f=open(file_path)
         config=json.loads(f.read())
-        self.ip=config["bind-ip"]
-        if self.ip=="":
-            self.ip="0.0.0.0"
         self.port=int(config["port"])
-        self.admin_phrase=config["admin-phrase"]
         self.uuid_bind=config["uuid-bind"]
         self.allow_reg=config["allow-reg"]
-        self.allow_cape=config["allow-cape"]
         self.texture_path=config["texture-folder"]
         self.database_path=config["database"]
 
@@ -219,6 +213,8 @@ def getConfigure(file_path="server_config.json"):
             f.write(DEFAULT_CONFIG)
             f.close()
         cfg=server_config(file_path)
+        if not os.path.exists(cfg.texture_path):
+            os.mkdir(cfg.texture_path)
     except Exception as e:
         print(e)
         return None

@@ -107,7 +107,7 @@ $(document).ready(function(){
           return;
         }
         var result=data.errno;
-        var _=["Register Success","Login Name Occupied","Invalid Login/Pwd","Server Error"]
+        var _=["Register Success","Login Name Occupied","Invalid Login/Pwd","Server Error","Register not allowed"]
         if(result==0){
           console.log("Register Success, ready to login with "+login+"/"+pwd);
           setTimeout(function(){doLogin(login,pwd);},1000);

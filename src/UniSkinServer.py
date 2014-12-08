@@ -55,6 +55,9 @@ class UserProfileHandler(RequestHandler):
 
 class WebRegisterHandler(RequestHandler):
     def post(self):
+        if not cfg.allow_reg:
+            self.write('{"errno":4,"msg":"reg not allowed"}')
+            return
         name=self.get_argument("login")
         passwd=self.get_argument("passwd")
         if db.user_exists(name):
