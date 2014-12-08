@@ -148,11 +148,11 @@ class WebSkinModificationHandle(RequestHandler):
     def delete(self):
         token=self.get_argument("token")
         if not sessionManager.valid(token):
-            self.set_status(403)
             self.write('{"errno":-1,"msg":"invalid token"}')
         else:
             name=sessionManager.get_name(token)
-            db.remove_skin(name,self.get_argument("type"))
+            h=db.remove_skin(name,self.get_argument("type"))
+            texture_cache.minus1(h)
     def post(self):
         import hashlib
         token=self.get_argument("token")
@@ -169,6 +169,7 @@ class WebSkinModificationHandle(RequestHandler):
             m=hashlib.sha256()
             m.update(file_bin)
             hex_name=m.hexdigest()
+            texture_cache.plus1(hex_name)
             open(cfg.texture_path+hex_name,'wb').write(file_bin)
             db.update_model(name,self.get_argument("type"),hex_name)
             self.write('{"errno":0,"msg":"success"}')
@@ -205,10 +206,11 @@ def run_server(cfg):
         print("Now server quit.")
 
 if __name__=="__main__":
-    global cfg,db
+    global cfg,db,texture_cache
     cfg=server_config.getConfigure()
     if cfg==None:
         print("Error Occured, check your config please.")
     else:
         db=server_config.DatabaseProvider(cfg.database_path)
+        texture_cache=server_config.TextureManager(db.get_cursor(),cfg.texture_path)
         run_server(cfg)

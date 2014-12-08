@@ -19,12 +19,12 @@ class SessionManager():
     def __init__(self):
         self.__sessions=dict()
     def valid(self,token):
-        return token in self.__sessions and self.__sessions[token]['time']<time.time()
+        return token in self.__sessions and self.__sessions[token]['time']>time.time()
     def get_name(self,token):
         return self.__sessions[token]['name'] if self.valid(token) else None
     def login(self,name):
         uid=getUUID()
-        i={'name':name,'time':time.time()}
+        i={'name':name,'time':time.time()+600}
         self.__sessions[uid]=i
         return uid
     def logout(self,token):
@@ -34,6 +34,39 @@ class SessionManager():
         else:
             return False
 
+class TextureManager():
+    __textures=dict()
+    __path='./textures/'
+    def __init__(self,cursor,folder_path):
+        import os
+        self.__path=folder_path
+        SQL='SELECT HASH_steve,HASH_alex,HASH_cape FROM users'
+        res=cursor.execute(SQL)
+        row=res.fetchone()
+        while row!=None:
+            self.plus1(row[0])
+            self.plus1(row[1])
+            self.plus1(row[2])
+            row=res.fetchone()
+        for f in os.listdir(self.__path):
+            if not f in self.__textures:
+                os.remove(self.__path+f)
+    def plus1(self,h):
+        if h==None: return
+        if h in self.__textures:
+            self.__textures[h]+=1
+        else:
+            self.__textures[h]=1
+    def minus1(self,h):
+        import os
+        if h==None: return
+        if not h in self.__textures: return
+        self.__textures[h]-=1
+        if self.__textures[h]==0:
+            del(self.__textures[h])
+            os.remove(self.__path+h)
+        
+        
 class UserInfoFactory():
     def toPublicProfile(record):
         import json
@@ -119,14 +152,18 @@ class DatabaseProvider():
         return UserInfoFactory.toWebProfile(rec)
     def remove_skin(self,name,skin_type):
         SQL=r'UPDATE users SET %s=NULL, last_update=? WHERE name=?'
+        SQL2=r'SELECT %s FROM users WHERE name=?'
         column=""
         if skin_type=="slim": column="HASH_alex"
         if skin_type=="default": column="HASH_steve"
         if skin_type=="cape": column="HASH_cape"
         if column=="":return
         SQL=SQL%column
+        SQL2=SQL2%column
+        h=self.__cursor.execute(SQL2,(name,)).fetchone()[0]
         self.__cursor.execute(SQL,(int(time.time()),name))
         self.__conn.commit()
+        return h
     def update_model(self,name,skin_type,hex_name):
         SQL=r'UPDATE users SET %s=?, last_update=? WHERE name=?'
         column=""
@@ -153,7 +190,8 @@ class DatabaseProvider():
         SQL="DELETE FROM users WHERE name=?"
         self.__cursor.execute(SQL,(name,))
         self.__conn.commit()
-
+    def get_cursor(self):
+        return self.__cursor;
 
 
 class server_config:
