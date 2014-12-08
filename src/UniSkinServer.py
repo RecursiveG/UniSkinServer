@@ -128,6 +128,9 @@ class WebProfileUpdateHandler(RequestHandler):
                     self.write('{"errno":1,"msg":"change password need current password"}')
                     return
                 if db.isValid(name,cur):
+                    if(len(new_pass)<4):
+                        self.write('{"errno":3,"msg":"New pwd too short"}')
+                        return
                     db.change_pwd(name,new_pass)
                     updated_item.append("password")
                 else:

@@ -48,6 +48,10 @@ $(document).ready(function(){
         fillModelStatus('default',data.models,'Steve');
         fillModelStatus('cape',data.models,'Cape');
 
+        $('#loginname').val('');
+        $('#pwd').val('');
+        $('#currentpwd').val('');
+        $('#newpassword').val('');
         $('#mgr-error').html('');
         $("#login-div").slideUp();
         $("#info-div").slideDown();
@@ -132,6 +136,8 @@ $(document).ready(function(){
         $("#info-div").slideUp();
         $("#manage-div").slideUp();
         $("#img-div").slideUp();
+        $('#loginname').val('');
+        $('#pwd').val('');
       })
     });
   });
@@ -150,10 +156,16 @@ $(document).ready(function(){
       },
       dataType: 'json',
       success: (function(a,b){
-        if (a.errno!=0){
-          $('#mgr-error').html('Profile Update Failed');
-        }else{
+        if (a.errno==0){
           $('#mgr-error').html('Success');
+        }else if(a.errno==3){
+          $('#mgr-error').html('New pwd too short');
+        }else if(a.errno==1){
+          $('#mgr-error').html('current pwd required');
+        }else if(a.errno==2){
+          $('#mgr-error').html('pwd incorrect');
+        }else{
+          $('#mgr-error').html('Profile Update Failed');
         }
       })
     });
@@ -170,8 +182,8 @@ $(document).ready(function(){
       $('#filechoose').val(null);
       return;
     }
-    if(f.size>2*1024*1024){
-      alert("File too large");
+    if(f.size>1024*1024){
+      alert("File too large. Max: 1MB");
       $('#filechoose').val(null);
       return;
     }
@@ -247,10 +259,10 @@ $(document).ready(function(){
 
   $(document).on('click','.texture-preview',function(e){
     s=e.currentTarget.getAttribute('href').substr(1);
-    $("#img-div").slideUp();
-    document.getElementById("preview-img").setAttribute("src","/textures/"+s)
-    $("#img-div").slideDown();
-    console.log(s);
+    $("#img-div").slideUp('normal',function(){
+      document.getElementById("preview-img").setAttribute("src","/textures/"+s);
+      $("#img-div").slideDown('normal');
+    });
   });
 
   $("#deleteaccount").click(function(){
@@ -276,129 +288,3 @@ $(document).ready(function(){
     }
   });
 });
-
-
-/*$(document).ready(function(){
-  genPreferBtn=(function(pre,lis){
-    if(pre=="cape")return "";
-    s1='<input type="button" value="Prefer" onclick="return setPrefer(\'';
-    s2='\')">';
-    s3="";
-    if(pre=='slim')
-      s3="slim|default";
-      else
-        s3="default|slim";
-        return s1+s3+s2;
-      });
-
-      refresh=(function(){
-        var token=$("#token").val()
-        $.ajax({
-          url: "/data",
-          type: "POST",
-          data: {"token": token},
-          dataType: "json",
-          success: function(data,stat){
-            var str="";
-            str+="User Name:"+data.player_name+"<br/>";
-            str+="User UUID:"+data.uuid+"<br/>";
-            str+="User Preference:"+data.model_preference.join("|")+"<br/>";
-            for (var model in data.models){
-              str+=model+":<img src=\"textures\\"+data.models[model]+"\"/><input type=\"button\" value=\"Delete\" onclick='return removeModel(\""+model+"\")'>"+genPreferBtn(model,data.models)+"</br>"
-            }
-            $("#userinfo").html(str);
-          }
-        });
-      });
-
-      setPrefer=(function(prefer){
-        console.log("update prefer "+prefer);
-        var token=$("#token").val()
-        $.ajax({
-          url: "/update",
-          type: "POST",
-          data: {
-            "preference": prefer,
-            "token": token
-          },
-          dataType: "json",
-          success: function(data,stat){
-            alert(data.msg);
-            refresh();
-          }
-        });
-      });
-
-      $("#reg").click(function(){
-        var login_name=$("#login").val()
-        var login_pwd=$("#pwd").val()
-        $.ajax({
-          url: "/reg",
-          type: "POST",
-          data: {
-            "login": login_name,
-            "passwd": login_pwd
-          },
-          dataType: "json",
-          success: function(data,stat){
-            alert(data.msg);
-          }
-        });
-      });
-      $("#doLogin").click(function(){
-        var login_name=$("#login").val()
-        var login_pwd=$("#pwd").val()
-        $.ajax({
-          url: "/login",
-          type: "POST",
-          data: {
-            "login": login_name,
-            "passwd": login_pwd
-          },
-          dataType: "json",
-          success: function(data,stat){
-            if (data.errno!=0){
-              alert(data.msg);
-            }else{
-              $("#token").val(data.msg)
-              refresh()
-            }
-          }
-        });
-      });
-
-      uploadFile=function(){
-        $.ajaxFileUpload({
-          url: "/upload",
-          secureurl: false,
-          fileElementId: "file",
-          data: {
-            "token": $("#token").val(),
-            "type": $('input:radio[name=type]:checked').val()
-          },
-          dataType: "json",
-          success: function(data,stat){
-            alert(data.msg);
-            refresh()
-          }
-        })
-      };
-
-      removeModel=function(modelName){
-        console.log("Model Remove "+modelName);
-        var token=$("#token").val()
-        $.ajax({
-          url: "/upload",
-          type: "DELETE",
-          data: {
-            "type": modelName,
-            "token": token
-          },
-          //dataType: "json",
-          successcd: function(data,stat){
-            alert(stat);
-            refresh();
-          }
-        });
-      }
-    });*/

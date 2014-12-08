@@ -86,9 +86,6 @@
   width: 100%;
 }
 
-
-
-
 .line-end{
   padding: 6px 12px;
   font-size: 14px;
@@ -102,4 +99,9 @@
 
 .error-msg{
   color: red;
+}
+
+#preview-img{
+  max-width: 100%;
+  margin-bottom: 10px;
 }
