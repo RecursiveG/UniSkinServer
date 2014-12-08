@@ -17,11 +17,23 @@ def getUUID():
 class SessionManager():
     def __init__(self):
         self.__sessions=dict()
+        self.__lastcheck=time.time();
     def valid(self,token):
-        return token in self.__sessions and self.__sessions[token]['time']>time.time()
+        if token in self.__sessions:
+            if self.__sessions[token]['time']>time.time():
+                return True
+            else:
+                del(self.__sessions[token])
+                return False
+        else:
+            return False
     def get_name(self,token):
         return self.__sessions[token]['name'] if self.valid(token) else None
     def login(self,name):
+        if self.__lastcheck + 3600 < time.time():
+            self.__lastcheck=time.time()
+            for t in [x for x in self.__sessions if self.__sessions[x]['time']<time.time()]:
+                del(self.__sessions[t])
         uid=getUUID()
         i={'name':name,'time':time.time()+600}
         self.__sessions[uid]=i
