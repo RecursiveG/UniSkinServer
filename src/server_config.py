@@ -79,6 +79,7 @@ class TextureManager():
 
 
 class UserInfoFactory():
+    @staticmethod
     def toPublicProfile(record):
         import json
         obj=dict(player_name=record[0],last_update=record[3],uuid=record[1])
@@ -95,6 +96,7 @@ class UserInfoFactory():
             skins["slim"]=record[5]
         obj['skins']=skins
         return json.dumps(obj)
+    @staticmethod
     def toWebProfile(rec):
         import json
         models=dict()
@@ -103,7 +105,7 @@ class UserInfoFactory():
         if rec[7]!=None: models['cape']=rec[7]
         obj=dict(player_name=rec[0],uuid=rec[1],model_preference=rec[4].split('|'),models=models)
         return json.dumps(obj)
-
+    @staticmethod
     def pwd_hash(name,pwd):
         import hashlib
         m1=hashlib.sha1()
