@@ -35,7 +35,7 @@ class LegacyCapeHandler(RequestHandler):
 
 class TexturesHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self,path):
-        self.set_header("Content_Type","image/png")
+        self.set_header("Content-Type","image/png")
 
 class UserProfileHandler(RequestHandler):
     def get(self,player_name):
@@ -63,7 +63,7 @@ class WebRegisterHandler(RequestHandler):
         if db.user_exists(name):
             self.write('{"errno":1,"msg":"already registered"}')
             return
-        if len(name)<=3 or len(name)>20 or len(passwd)<4:
+        if len(name)<=0 or len(passwd)<4:
             self.write('{"errno":2,"msg":"invalid name/pwd"}')
             return
         try:
