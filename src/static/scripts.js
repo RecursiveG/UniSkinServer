@@ -40,7 +40,6 @@ $(document).ready(function(){
           return;
         }
         $("#playername").html(data.player_name);
-        $("#playeruuid").html(data.uuid)
         var p=data.model_preference[0]
         $("#preferedmodel").html(p=='slim'?"Alex":"Steve");
 
@@ -62,7 +61,7 @@ $(document).ready(function(){
   });
 
   doLogin=(function(login,pwd){
-    console.log("Ready to login with "+login+"/"+pwd);
+    //console.log("Ready to login with "+login+"/"+pwd);
     $.ajax({
       url: "/login",
       type: "POST",
@@ -79,7 +78,7 @@ $(document).ready(function(){
         var result=data.errno;
         if(result==0){
           token=data.msg;
-          console.log("Login Success with token: "+token);
+          //console.log("Login Success with token: "+token);
           session_token=token;
           setTimeout(refresh,500);
         }else{
@@ -109,7 +108,7 @@ $(document).ready(function(){
         var result=data.errno;
         var _=["Register Success","Login Name Occupied","Invalid Login/Pwd","Server Error","Register not allowed"]
         if(result==0){
-          console.log("Register Success, ready to login with "+login+"/"+pwd);
+          //console.log("Register Success, ready to login with "+login+"/"+pwd);
           setTimeout(function(){doLogin(login,pwd);},1000);
         }else{
           $("#login-error").html(_[result]);
@@ -173,7 +172,7 @@ $(document).ready(function(){
 
   $(document).on('change','#filechoose',function(e){
     e.preventDefault();
-    console.log('changed');
+    //console.log('changed');
     if(target_model=="")return;
     var f=$('#filechoose')[0].files[0];
     var m=target_model;target_model="";
@@ -217,7 +216,7 @@ $(document).ready(function(){
   $('#uploadCapeModel').click(function(){uploadModel('cape')});
 
   removeModel=(function(modelName){
-    console.log("Model Remove "+modelName);
+    //console.log("Model Remove "+modelName);
     var token=$("#token").val()
     $.ajax({
       url: "/upload",

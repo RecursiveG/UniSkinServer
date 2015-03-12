@@ -53,26 +53,13 @@ Upload:
 if errno==-1:
 	invalid sessionToken
 
-========= Inner Pickle Data Structure ======
-{
-	"Player1": {
-		"uuid": "STRING",
-		"pwd": {SHA-512(sha1(real_pwd)+sha1("Player1"))}
-		"models":{
-			"alex": SHA256 Hash
-			"steve": sha256Hash
-			"cape": sha256Hash
-		}
-		Perference: ["steve","alex"]
-	}
-}
+========= Database Table =========
 
 CREATE TABLE IF NOT EXISTS users(
-	email TEXT NOT NULL PRIMARY KEY UNIQUE,
-	pwd   TEXT NOT NULL,
-	uuid  TEXT NOT NULL UNIQUE,
+	id    TEXT NOT NULL PRIMARY KEY UNIQUE,
 	name  TEXT NOT NULL UNIQUE,
-	last_mod   INT NOT NULL,
+	pwd   TEXT NOT NULL,
+	last_update INT NOT NULL,
 	preference TEXT,
 	HASH_alex  TEXT,
 	HASH_steve TEXT,

@@ -11,47 +11,17 @@ def ArgHelper (handler,arg,default=None):
     x=default
   return x
 
-class LegacySkinHandler(RequestHandler):
-    def get(self,player_name):
-        if not db.user_exists(player_name):
-            self.set_status(404)
-        else:
-            h=db.getLegacySkin(player_name)
-            if h==None:
-                self.set_status(404)
-            else:
-                self.redirect("/textures/"+h)
-
-class LegacyCapeHandler(RequestHandler):
-    def get(self,player_name):
-        if not db.user_exists(player_name):
-            self.set_status(404)
-        else:
-            h=db.getLegacyCape(player_name)
-            if h==None:
-                self.set_status(404)
-            else:
-                self.redirect("/textures/"+h)
-
 class TexturesHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self,path):
         self.set_header("Content-Type","image/png")
 
 class UserProfileHandler(RequestHandler):
     def get(self,player_name):
-        arr=player_name.split(".")
-        name=arr[0]
+        name=player_name.lower()
         if not db.user_exists(name):
             self.set_status(404)
             return
-        if len(arr)==1: #Type A
-            if cfg.uuid_bind:
-                self.set_status(400)
-                self.write('{"errno":1,"msg":"UUID verfication required"}')
-                return
-            self.write(db.user_json(name));
-        else:
-            self.write(db.user_json(name));
+        self.write(db.user_json(name));
 
 class WebRegisterHandler(RequestHandler):
     def post(self):
@@ -81,7 +51,7 @@ class WebRegisterHandler(RequestHandler):
             pwd=ArgHelper(self,"pwd")
             name=sessionManager.get_name(token)
             if db.isValid(name,pwd):
-                db.rm_account(name)
+                db.rm_account(name,texture_cache)
                 self.write('{"errno":0,"msg":""}')
             else:
                 self.write('{"errno":2,"msg":"password change verification fail"}')
@@ -179,10 +149,8 @@ class WebSkinModificationHandle(RequestHandler):
 
 def run_server(cfg):
     global sessionManager
-    handlers=[(r"/MinecraftSkins/(.*).png",  LegacySkinHandler),
-              (r"/MinecraftCloaks/(.*).png", LegacyCapeHandler),
-              (r"/textures/(.*)",            TexturesHandler,{"path":"textures"}),
-              (r"/(.*).json",                UserProfileHandler),
+    handlers=[(r"/textures/(.*)",  TexturesHandler,{"path":"textures"}),
+              (r"/(.*).json",      UserProfileHandler),
 
               (r"/",               tornado.web.RedirectHandler,{"url": "/index.html"}),
               (r"/(index\.html)",  tornado.web.StaticFileHandler,{"path":"static"}),
@@ -191,7 +159,7 @@ def run_server(cfg):
 
               (r"/reg",   WebRegisterHandler),
               (r"/login", WebLoginHandler),
-              (r"/logout", WebLogoutHandler),
+              (r"/logout",WebLogoutHandler),
               (r"/update",WebProfileUpdateHandler),
               (r"/data",  WebDataAccessHandler),
               (r"/upload",WebSkinModificationHandle),
