@@ -219,8 +219,8 @@ $(document).ready(function(){
     //console.log("Model Remove "+modelName);
     var token=$("#token").val()
     $.ajax({
-      url: "/upload",
-      type: "DELETE",
+      url: "/delski",
+      type: "POST",
       data: {
         "type": modelName,
         "token": session_token
@@ -268,8 +268,8 @@ $(document).ready(function(){
     $('#mgr-error').html('');
     if(confirm('Do you really want to delete your account?')){
       $.ajax({
-        url: "/reg",
-        type: "DELETE",
+        url: "/delacc",
+        type: "POST",
         data: {
           "pwd": $("#currentpwd").val(),
           "token": session_token

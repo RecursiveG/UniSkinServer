@@ -43,7 +43,9 @@ class WebRegisterHandler(RequestHandler):
             self.write('{"errno":3,"msg":"Internal Server Error"}')
             return
         self.write('{"errno":0,"msg":""}')
-    def delete(self):
+
+class WebAccountDelHandler(RequestHandler):
+    def post(self):
         token=self.get_argument("token")
         if not sessionManager.valid(token):
             self.write('{"errno":-1,"msg":"invalid token"}')
@@ -117,8 +119,8 @@ class WebProfileUpdateHandler(RequestHandler):
             if len(updated_item)!=0:
                 self.write('{"errno":0,"msg":"successfully updated %s"}'%(','.join(updated_item)))
 
-class WebSkinModificationHandle(RequestHandler):
-    def delete(self):
+class WebSkinDelHandle(RequestHandler):
+    def post(self):
         token=self.get_argument("token")
         if not sessionManager.valid(token):
             self.write('{"errno":-1,"msg":"invalid token"}')
@@ -126,6 +128,8 @@ class WebSkinModificationHandle(RequestHandler):
             name=sessionManager.get_name(token)
             h=db.remove_skin(name,self.get_argument("type"))
             texture_cache.minus1(h)
+
+class WebSkinModificationHandle(RequestHandler):
     def post(self):
         import hashlib
         token=self.get_argument("token")
@@ -158,6 +162,8 @@ def run_server(cfg):
               (r"/static/(.*)",    tornado.web.StaticFileHandler,{"path":"static"}),
 
               (r"/reg",   WebRegisterHandler),
+              (r"/delacc",WebAccountDelHandler),
+              (r"/delski",WebSkinDelHandle),
               (r"/login", WebLoginHandler),
               (r"/logout",WebLogoutHandler),
               (r"/update",WebProfileUpdateHandler),
