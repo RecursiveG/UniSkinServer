@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import server_config
 import tornado.web
+import tornado.options
 from tornado.web import RequestHandler
 
 def ArgHelper (handler,arg,default=None):
@@ -173,6 +174,7 @@ def run_server(cfg):
               (r".*", tornado.web.ErrorHandler,{"status_code":404})]
 
     try:
+        tornado.options.parse_command_line()
         application=tornado.web.Application(handlers,debug=True)
         application.listen(cfg.port)
         print("Starting UniSkinServer on port:",cfg.port)
