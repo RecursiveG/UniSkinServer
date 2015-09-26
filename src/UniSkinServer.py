@@ -1,36 +1,39 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
+
 import server_config
 import tornado.web
 import tornado.options
+import tornado.ioloop
 from tornado.web import RequestHandler
+import sys
 
-def ArgHelper (handler,arg,default=None):
-  try:
-    x=handler.get_argument(arg)
-  except tornado.web.MissingArgumentError:
-    x=default
-  return x
+def ArgHelper(handler,arg,default=None):
+    try:
+        x = handler.get_argument(arg)
+    except tornado.web.MissingArgumentError:
+        x = default
+    return x
 
 class TexturesHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self,path):
-        self.set_header("Content-Type","image/png")
+        self.set_header("Content-Type", "image/png")
 
 class UserProfileHandler(RequestHandler):
-    def get(self,player_name):
+    def get(self, player_name):
         name=player_name.lower()
         if not db.user_exists(name):
             self.set_status(404)
             return
-        self.write(db.user_json(name));
+        self.write(db.user_json(name))
 
 class WebRegisterHandler(RequestHandler):
     def post(self):
         if not cfg.allow_reg:
             self.write('{"errno":4,"msg":"reg not allowed"}')
             return
-        name=self.get_argument("login")
-        passwd=self.get_argument("passwd")
+        name = self.get_argument("login")
+        passwd = self.get_argument("passwd")
         if db.user_exists(name):
             self.write('{"errno":1,"msg":"already registered"}')
             return
@@ -57,7 +60,7 @@ class WebAccountDelHandler(RequestHandler):
                 db.rm_account(name,texture_cache)
                 self.write('{"errno":0,"msg":""}')
             else:
-                self.write('{"errno":2,"msg":"password change verification fail"}')
+                self.write('{"errno":2,"msg":"password verification fail"}')
 
 class WebLoginHandler(RequestHandler):
     def post(self):
@@ -172,7 +175,6 @@ def run_server(cfg):
               (r"/upload",WebSkinModificationHandle),
 
               (r".*", tornado.web.ErrorHandler,{"status_code":404})]
-
     try:
         tornado.options.parse_command_line()
         application=tornado.web.Application(handlers,debug=True)
@@ -184,12 +186,36 @@ def run_server(cfg):
         print(e)
         print("Now server quit.")
 
-if __name__=="__main__":
-    global cfg,db,texture_cache
-    cfg=server_config.getConfigure()
-    if cfg==None:
-        print("Error Occured, check your config please.")
-    else:
+def parseCommandLine(args):
+    """
+    :type args: list[str]
+    """
+    if args[0] == "-h":
+        print("python UniSkinServer.py [switch] [params ...]")
+        print("   -c [username] [new_password] // force change the password")
+    elif args[0] == "-c":
+        cfg=server_config.getConfigure()
         db=server_config.DatabaseProvider(cfg.database_path)
-        texture_cache=server_config.TextureManager(db.get_cursor(),cfg.texture_path)
-        run_server(cfg)
+        user_name = args[1]
+        pwd = args[2]
+        if (db.user_exists(user_name)):
+            db.change_pwd(user_name, pwd)
+            print("Password changed")
+        else:
+            print("User not exists.")
+    else:
+        print("Unknown Command. Try -h")
+
+if __name__=="__main__":
+    if (len(sys.argv) > 1):
+        parseCommandLine(sys.argv[1:])
+    else:
+
+        global cfg,db,texture_cache
+        cfg=server_config.getConfigure()
+        if cfg is None:
+            print("Error Occurred, check your config please.")
+        else:
+            db=server_config.DatabaseProvider(cfg.database_path)
+            texture_cache=server_config.TextureManager(db.get_cursor(),cfg.texture_path)
+            run_server(cfg)
