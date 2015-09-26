@@ -11,3 +11,7 @@
 
 ### Universal Skin Mod
 请见[UniSkinMod](https://github.com/RecursiveG/UniSkinMod)
+
+### Command Line Arguments
+
+    python UniSkinServer.py -c [user_name] [new_password]  #force change a password, OK to execute while server is running.
