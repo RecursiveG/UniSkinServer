@@ -16,7 +16,7 @@ if a client want the profile for player `John`, the request will be
 A compatible server should implements all the endpoints.
 
 ## Texture Files Link:
-Endpoints:
+Endpoint:
 
     /textures/{unique identifier to the file}
 
@@ -35,10 +35,13 @@ Endpoint:
     /{PlayerName}.json
 
 The `{PlayerName}` here is not case-sensitive
+If non-ASCII character is needed. They should be encoded as UTF-8 and use [Precent-Encoding](https://en.wikipedia.org/wiki/Percent-encoding) notation.
+e.g. `%E5%B0%8F%E6%98%8E.json`
 
 Response:
 
 - 200: Return the UserProfile json
+- 400: If the encoding is not acceptable
 - 404: PlayerName not registered
 
 ## UserProfile:
@@ -67,6 +70,13 @@ And An Example Could Be:
 
 All the fields are optional, and a compatible client should automatically skip
 any missing information
+
+## Model Name Convention
+
+- `alex`: The slim-arm or female player model
+- `steve`: The triditional player model
+- `cape`: Reserved for cape texture use
+- `elytron`: Reserved for elytron texture use
 
 ## Response for Errors:
 For any response other than 2** & 3**,
