@@ -157,7 +157,7 @@ class WebSkinModificationHandle(RequestHandler):
 
 def run_server(cfg):
     global sessionManager
-    handlers=[(r"/textures/(.*)",  TexturesHandler,{"path":"textures"}),
+    handlers=[(r"/textures/(.*)",  TexturesHandler,{"path":cfg.texture_path}),
               (r"/(.*).json",      UserProfileHandler),
 
               (r"/",               tornado.web.RedirectHandler,{"url": "/index.html"}),
