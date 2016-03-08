@@ -1,3 +1,5 @@
+import time
+
 class SessionManager():
     '''track the accessToken, no interaction with database'''
     @staticmethod
@@ -33,41 +35,88 @@ class SessionManager():
         else:
             return False
 
+
 class TextureManager():
     '''remove files when startup or file no more used, need info from database at startup time'''
     __textures=dict()
     __path='./textures/'
-    def __init__(self,cursor,folder_path):
-        import os
+
+    def __init__(self, folder_path):
         self.__path=folder_path
-        SQL='SELECT HASH_steve,HASH_alex,HASH_cape FROM users'
-        res=cursor.execute(SQL)
 
-        row=res.fetchone()
-        while row!=None:
-            self.plus1(row[0])
-            self.plus1(row[1])
-            self.plus1(row[2])
-            row=res.fetchone()
-
-        for f in os.listdir(self.__path):
-            if not f in self.__textures:
-                os.remove(self.__path+f)
-    def plus1(self,h):
-        if h==None: return
+    def inc_hash(self,h):
+        if h==None or h=="": return
         if h in self.__textures:
             self.__textures[h]+=1
         else:
             self.__textures[h]=1
-    def minus1(self,h):
+
+    def dec_hash(self,h):
         import os
-        if h==None: return
+        if h==None or h=="": return
         if not h in self.__textures: return
         self.__textures[h]-=1
         if self.__textures[h]==0:
             del(self.__textures[h])
             os.remove(self.__path+h)
 
-def UniSkinAPIFormatter(database_record): pass
+    def force_clean(self):
+        import os
+        for f in os.listdir(self.__path):
+            if not f in self.__textures:
+                os.remove(self.__path+f)
 
-def WebDataFormatter(database_record): pass
+def UniSkinAPIFormatter(record):
+    import json
+    data = dict(player_name=record["username"],
+                last_update=record["last_update"])
+    perf_list=list()
+    if record["type_preference"]["skin"]=='static':
+        if record["model_preference"]=="slim":
+            perf_list=["slim", "default", "slim_dynamic", "default_dynamic"]
+        else:
+            perf_list=["default", "slim", "default_dynamic", "slim_dynamic"]
+    elif record["type_preference"]["skin"]=='dynamic':
+        if record["model_preference"]=="slim":
+            perf_list=["slim_dynamic", "default_dynamic", "slim", "default"]
+        else:
+            perf_list=["default_dynamic", "slim_dynamic", "default", "slim"]
+    if record["type_preference"]["cape"]=="static":
+        perf_list.append("cape")
+    elif record["type_preference"]["cape"]=="dynamic":
+        perf_list.append("cape_dynamic")
+    if record["type_preference"]["elytra"]=="static":
+        perf_list.append("elytra")
+    elif record["type_preference"]["elytra"]=="dynamic":
+        perf_list.append("elytra_dynamic")
+    data["model_preference"]=perf_list
+
+    good = (lambda x: x is not None and x!="")
+    skins = dict()
+    s = record["textures"]["skin_default_static"]
+    if good(s): skins["default"]=s
+    s = record["textures"]["skin_slim_static"]
+    if good(s): skins["slim"]=s
+    s = record["textures"]["cape_static"]
+    if good(s):
+        skins["cape"]=s
+        data["cape"]=s
+    s = record["textures"]["elytra_static"]
+    if good(s): skins["elytra"]=s
+
+    good = (lambda x: len(x["hashes"])>0 and x["interval"]>0)
+    join = (lambda x: str(x["interval"]+","+",".join(x["hashed"])))
+    s = record["textures"]["skin_default_dynamic"]
+    if good(s): skins["default_dynamic"]=join(s)
+    s = record["textures"]["skin_slim_dynamic"]
+    if good(s): skins["slim_dynamic"]=join(s)
+    s = record["textures"]["cape_dynamic"]
+    if good(s): skins["cape_dynamic"]=join(s)
+    s = record["textures"]["elytra_dynamic"]
+    if good(s): skins["elytra_dynamic"]=join(s)
+
+    data["skins"] = skins
+    return json.dumps(data)
+
+def WebDataFormatter(database_record):
+    pass

@@ -49,7 +49,7 @@ UserProfile代表了一个玩家的信息
 
     {
       "player_name": {字符串，大小写正确的玩家名},
-      "last_update": {整数，玩家最后一次修改个人信息的时间，UNIX时间戳},
+      "last_update": {整数，玩家最后一次修改个人信息的时间，UNIX时间戳, 秒},
       "model_preference": {字符串数组，按顺序存储玩家需要加载的模型名称},
       "skins": {模型名称到对应材质UID的字典}
       "cape": {披风的UID} (已弃用)

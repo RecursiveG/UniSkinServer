@@ -81,7 +81,7 @@ This file is not a part of `UniSkinAPI`
     {
       "username": "{string}",
       "password": "{string}",
-      "update_time": "{unix timestamp in ms}",
+      "last_update": "{unix timestamp in s}",
       "textures": {
         "skin_default_static": {string, hash},
         "skin_default_dynamic": {

@@ -1,3 +1,8 @@
+import tornado.web
+import tornado.options
+import tornado.ioloop
+from tornado.web import RequestHandler
+import logging
 
 def capture_post(*args, **args_with_default):
     def real_wrapper(wrapped_func):
@@ -10,7 +15,7 @@ def capture_post(*args, **args_with_default):
                 except tornado.web.MissingArgumentError:
                     handler.write('{"errno": 6, "msg":"Missing argument: %s"}'%arg)
                     argument_dict = None
-                if (argument_dict is None) return;
+                if (argument_dict is None): return;
             for arg in args_with_default:
                 try:
                     x = handler.get_argument(arg)
@@ -27,17 +32,20 @@ class TexturesHandler(tornado.web.StaticFileHandler):
 
 class UserProfileHandler(RequestHandler):
     def get(self, player_name):
+        if (not db.has_user(player_name)):
+            self.set_status(404)
+            return
         self.write(db.get_formatted(player_name, uss_runtime.UniSkinAPIFormatter))
 
 class WebRegisterHandler(RequestHandler):
     @capture_post("login","passwd")
     def post(self, args):
-        if not cfg.allow_reg:
+        if not cfg["allow-reg"]:
             self.write('{"errno":7,"msg":"reg not allowed"}')
             return
         name = args["login"]
         passwd = args["passwd"]
-        if db.user_exists(name):
+        if db.has_user(name):
             self.write('{"errno":5,"msg":"already registered"}')
             return
         if len(name)<=0:
@@ -46,7 +54,7 @@ class WebRegisterHandler(RequestHandler):
         if len(passwd)<4:
             self.write('{"errno":2,"msg":"invalid pwd"}')
             return
-        db.new_user(name,passwd)
+        db.create_user(name,passwd)
         self.write('{"errno":0,"msg":""}')
 
 class WebLoginHandler(RequestHandler):
@@ -65,8 +73,8 @@ def stop_server():
     tornado.ioloop.IOLoop.instance().stop()
     logging.info('exit success')
 
-def run_server(cfg):
-    handlers=[(r"/textures/(.*)",    TexturesHandler,{"path":cfg["texture_path"]}),
+def run_server():
+    handlers=[(r"/textures/(.*)",    TexturesHandler,{"path":cfg["texture-folder"]}),
               (r"/(.*).json",        UserProfileHandler),
 
               (r"/",                 tornado.web.RedirectHandler,  {"url" :"/index.html"}),
@@ -76,19 +84,20 @@ def run_server(cfg):
 
               (r"/register",         WebRegisterHandler),
               (r"/login",            WebLoginHandler),
-              (r"/logout",           WebLogoutHandler),
-              (r"/userdata",         WebDataAccessHandler),
-              (r"/delete_account",   WebAccountDelHandler),
-              (r"/chpwd",            WebChangePasswordHandler),
-              (r"/model_preference", WebModelPreferenceHandler),
-              (r"/type_preference",  WebTypePreferenceHandler),
-              (r"/dynamic_interval", WebSetDynamicIntervalHandler),
-              (r"/upload_texture",   WebSkinModificationHandler),
-              (r"/delete_texture",   WebSkinDeleteHandler),
-              (r"/adm_action",       WebAdministrationHandler),
+              #(r"/logout",           WebLogoutHandler),
+              #(r"/userdata",         WebDataAccessHandler),
+              #(r"/delete_account",   WebAccountDelHandler),
+              #(r"/chpwd",            WebChangePasswordHandler),
+              #(r"/model_preference", WebModelPreferenceHandler),
+              #(r"/type_preference",  WebTypePreferenceHandler),
+              #(r"/dynamic_interval", WebSetDynamicIntervalHandler),
+              #(r"/upload_texture",   WebSkinModificationHandler),
+              #(r"/delete_texture",   WebSkinDeleteHandler),
+              #(r"/adm_action",       WebAdministrationHandler),
 
               (r".*",                tornado.web.ErrorHandler,{"status_code":404})]
     try:
+        import signal
         tornado.options.parse_command_line()
         on_signal=(lambda sig, frame: tornado.ioloop.IOLoop.instance().add_callback_from_signal(stop_server))
         signal.signal(signal.SIGINT, on_signal)
@@ -96,7 +105,6 @@ def run_server(cfg):
         application=tornado.web.Application(handlers,debug=True)
         application.listen(cfg["port"])
         print("Starting UniSkinServer on port:",cfg["port"])
-        tornado.ioloop.PeriodicCallback(check_exit, 100).start()
         tornado.ioloop.IOLoop.instance().start()
     except Exception as e:
         print(e)
@@ -108,11 +116,13 @@ import uss_runtime
 
 if __name__=="__main__":
     global cfg, db, texture_cache, sessionManager
-    cfg=uss_config.getConfigure()
+    cfg=uss_config.get_config()
     if cfg is None:
         print("Error Occurred, check your config please.")
     else:
-        db=uss_database(cfg["database_path"])
-        texture_cache=uss_runtime.TextureManager(cfg["texture_path"], db.get_hash_statistics())
+        db=uss_database(cfg["database-path"])
+        texture_cache=uss_runtime.TextureManager(cfg["texture-folder"])
+        db.scan_hashes((lambda hash: texture_cache.inc_hash(hash)))
+        texture_cache.force_clean()
         sessionManager=uss_runtime.SessionManager()
         run_server()

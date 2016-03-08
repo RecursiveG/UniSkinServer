@@ -2,7 +2,7 @@ DEFAULT_CONFIG='''{
     "port": "12345",
     "allow-reg": true,
     "texture-folder": "textures/",
-    "database": "data.db",
+    "database-path": "data.db",
     "admin-passphrase": ""
 }
 '''
@@ -18,8 +18,8 @@ def get_config(file_path="server_config.json"):
 
         f=open(file_path)
         config=json.loads(f.read())
-        if not os.path.exists(config["texture_path"]):
-            os.mkdir(config["texture_path"])
+        if not os.path.exists(config["texture-folder"]):
+            os.mkdir(config["texture-folder"])
     except Exception as e:
         print(e)
         return None

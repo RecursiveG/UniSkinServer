@@ -49,7 +49,7 @@ UserProfile is a JSON string, the format is:
 
     {
       "player_name": {string, Case-Corrected player name},
-      "last_update": {int, the time the player made the last change, in unix timestamp},
+      "last_update": {int, the time the player made the last change, in unix timestamp, seconds},
       "model_preference": {array of string, the name of the models are listed in order of preference},
       "skins": {Map<String,String>, map of model name to texture hash}
       "cape": {hash of cape texture}(Deprecated)
