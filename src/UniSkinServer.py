@@ -1,19 +1,25 @@
-#!/bin/python3
-# -*- coding: utf-8 -*-
 
-import server_config
-import tornado.web
-import tornado.options
-import tornado.ioloop
-from tornado.web import RequestHandler
-import sys
-
-def ArgHelper(handler,arg,default=None):
-    try:
-        x = handler.get_argument(arg)
-    except tornado.web.MissingArgumentError:
-        x = default
-    return x
+def capture_post(*args, **args_with_default):
+    def real_wrapper(wrapped_func):
+        def new_func(handler):
+            argument_dict=dict()
+            for arg in args:
+                try:
+                    x = handler.get_argument(arg)
+                    argument_dict[arg]=x
+                except tornado.web.MissingArgumentError:
+                    handler.write('{"errno": 6, "msg":"Missing argument: %s"}'%arg)
+                    argument_dict = None
+                if (argument_dict is None) return;
+            for arg in args_with_default:
+                try:
+                    x = handler.get_argument(arg)
+                    argument_dict[arg]=x
+                except tornado.web.MissingArgumentError:
+                    argument_dict[arg]=args_with_default[arg]
+            wrapped_func(handler, argument_dict)
+        return new_func
+    return real_wrapper
 
 class TexturesHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self,path):
@@ -21,201 +27,92 @@ class TexturesHandler(tornado.web.StaticFileHandler):
 
 class UserProfileHandler(RequestHandler):
     def get(self, player_name):
-        name=player_name.lower()
-        if not db.user_exists(name):
-            self.set_status(404)
-            return
-        self.write(db.user_json(name))
+        self.write(db.get_formatted(player_name, uss_runtime.UniSkinAPIFormatter))
 
 class WebRegisterHandler(RequestHandler):
-    def post(self):
+    @capture_post("login","passwd")
+    def post(self, args):
         if not cfg.allow_reg:
-            self.write('{"errno":4,"msg":"reg not allowed"}')
+            self.write('{"errno":7,"msg":"reg not allowed"}')
             return
-        name = self.get_argument("login")
-        passwd = self.get_argument("passwd")
+        name = args["login"]
+        passwd = args["passwd"]
         if db.user_exists(name):
-            self.write('{"errno":1,"msg":"already registered"}')
+            self.write('{"errno":5,"msg":"already registered"}')
             return
-        if len(name)<=0 or len(passwd)<4:
-            self.write('{"errno":2,"msg":"invalid name/pwd"}')
+        if len(name)<=0:
+            self.write('{"errno":3,"msg":"invalid name"}')
             return
-        try:
-            db.new_user(name,passwd)
-        except Exception as e:
-            print(e)
-            self.write('{"errno":3,"msg":"Internal Server Error"}')
+        if len(passwd)<4:
+            self.write('{"errno":2,"msg":"invalid pwd"}')
             return
+        db.new_user(name,passwd)
         self.write('{"errno":0,"msg":""}')
 
-class WebAccountDelHandler(RequestHandler):
-    def post(self):
-        token=self.get_argument("token")
-        if not sessionManager.valid(token):
-            self.write('{"errno":-1,"msg":"invalid token"}')
-        else:
-            pwd=ArgHelper(self,"pwd")
-            name=sessionManager.get_name(token)
-            if db.isValid(name,pwd):
-                db.rm_account(name,texture_cache)
-                self.write('{"errno":0,"msg":""}')
-            else:
-                self.write('{"errno":2,"msg":"password verification fail"}')
-
 class WebLoginHandler(RequestHandler):
-    def post(self):
+    @capture_post("login","passwd")
+    def post(self, args):
         name=self.get_argument("login")
         passwd=self.get_argument("passwd")
-        if not db.isValid(name,passwd):
+        if not db.is_hashed_passwd_match(name,passwd):
             self.write('{"errno":1,"msg":"invalid login"}')
         else:
             token=sessionManager.login(name)
             self.write('{"errno":0,"msg":"%s"}'%token)
 
-class WebLogoutHandler(RequestHandler):
-    def post(self):
-        token=self.get_argument("token")
-        success=sessionManager.logout(token)
-        if not success:
-            self.write('{"errno":1,"msg":"logout fail"}')
-        else:
-            self.write('{"errno":0,"msg":""}')
-
-class WebDataAccessHandler(RequestHandler):
-    def post(self):
-        token=self.get_argument("token")
-        if not sessionManager.valid(token):
-            self.write('{"errno":-1,"msg":"invalid token"}')
-        else:
-            name=sessionManager.get_name(token)
-            self.write(db.user_json_web(name))
-
-class WebProfileUpdateHandler(RequestHandler):
-    def post(self):
-        token=self.get_argument("token")
-        if not sessionManager.valid(token):
-            self.write('{"errno":-1,"msg":"invalid token"}')
-        else:
-            name=sessionManager.get_name(token)
-            updated_item=list()
-            uuid=ArgHelper(self,"uuid")
-            preference=ArgHelper(self,"preference")
-            new_pass=ArgHelper(self,"new_passwd")
-            if new_pass!=None:
-                cur=ArgHelper(self,"current_passwd")
-                if cur==None:
-                    self.write('{"errno":1,"msg":"change password need current password"}')
-                    return
-                if db.isValid(name,cur):
-                    if(len(new_pass)<4):
-                        self.write('{"errno":3,"msg":"New pwd too short"}')
-                        return
-                    db.change_pwd(name,new_pass)
-                    updated_item.append("password")
-                else:
-                    self.write('{"errno":2,"msg":"password change verification fail"}')
-            if uuid!=None:
-                db.update_uuid(name,uuid)
-                updated_item.append("uuid")
-            if preference!=None:
-                db.update_preference(name,preference)
-                updated_item.append("perference")
-            if len(updated_item)!=0:
-                self.write('{"errno":0,"msg":"successfully updated %s"}'%(','.join(updated_item)))
-
-class WebSkinDelHandle(RequestHandler):
-    def post(self):
-        token=self.get_argument("token")
-        if not sessionManager.valid(token):
-            self.write('{"errno":-1,"msg":"invalid token"}')
-        else:
-            name=sessionManager.get_name(token)
-            h=db.remove_skin(name,self.get_argument("type"))
-            texture_cache.minus1(h)
-
-class WebSkinModificationHandle(RequestHandler):
-    def post(self):
-        import hashlib
-        token=self.get_argument("token")
-        if not sessionManager.valid(token):
-            self.set_status(403)
-            self.write('{"errno":-1,"msg":"invalid token"}')
-        else:
-            name=sessionManager.get_name(token)
-            skin_file=self.request.files.get('file')[0]
-            file_bin=skin_file['body']
-            if len(file_bin) > 1024*1024:
-                self.write('{"errno":1,"msg":"file too large"}')
-                return
-            m=hashlib.sha256()
-            m.update(file_bin)
-            hex_name=m.hexdigest()
-            texture_cache.plus1(hex_name)
-            open(cfg.texture_path+hex_name,'wb').write(file_bin)
-            db.update_model(name,self.get_argument("type"),hex_name)
-            self.write('{"errno":0,"msg":"success"}')
+def stop_server():
+    db.close()
+    tornado.ioloop.IOLoop.instance().stop()
+    logging.info('exit success')
 
 def run_server(cfg):
-    global sessionManager
-    handlers=[(r"/textures/(.*)",  TexturesHandler,{"path":cfg.texture_path}),
-              (r"/(.*).json",      UserProfileHandler),
+    handlers=[(r"/textures/(.*)",    TexturesHandler,{"path":cfg["texture_path"]}),
+              (r"/(.*).json",        UserProfileHandler),
 
-              (r"/",               tornado.web.RedirectHandler,{"url": "/index.html"}),
-              (r"/(index\.html)",  tornado.web.StaticFileHandler,{"path":"static"}),
-              (r"/(favicon\.png)", tornado.web.StaticFileHandler,{"path":"static"}),
-              (r"/static/(.*)",    tornado.web.StaticFileHandler,{"path":"static"}),
+              (r"/",                 tornado.web.RedirectHandler,  {"url" :"/index.html"}),
+              (r"/(index\.html)",    tornado.web.StaticFileHandler,{"path":"static"}),
+              (r"/(favicon\.png)",   tornado.web.StaticFileHandler,{"path":"static"}),
+              (r"/static/(.*)",      tornado.web.StaticFileHandler,{"path":"static"}),
 
-              (r"/reg",   WebRegisterHandler),
-              (r"/delacc",WebAccountDelHandler),
-              (r"/delski",WebSkinDelHandle),
-              (r"/login", WebLoginHandler),
-              (r"/logout",WebLogoutHandler),
-              (r"/update",WebProfileUpdateHandler),
-              (r"/data",  WebDataAccessHandler),
-              (r"/upload",WebSkinModificationHandle),
+              (r"/register",         WebRegisterHandler),
+              (r"/login",            WebLoginHandler),
+              (r"/logout",           WebLogoutHandler),
+              (r"/userdata",         WebDataAccessHandler),
+              (r"/delete_account",   WebAccountDelHandler),
+              (r"/chpwd",            WebChangePasswordHandler),
+              (r"/model_preference", WebModelPreferenceHandler),
+              (r"/type_preference",  WebTypePreferenceHandler),
+              (r"/dynamic_interval", WebSetDynamicIntervalHandler),
+              (r"/upload_texture",   WebSkinModificationHandler),
+              (r"/delete_texture",   WebSkinDeleteHandler),
+              (r"/adm_action",       WebAdministrationHandler),
 
-              (r".*", tornado.web.ErrorHandler,{"status_code":404})]
+              (r".*",                tornado.web.ErrorHandler,{"status_code":404})]
     try:
         tornado.options.parse_command_line()
+        on_signal=(lambda sig, frame: tornado.ioloop.IOLoop.instance().add_callback_from_signal(stop_server))
+        signal.signal(signal.SIGINT, on_signal)
+        signal.signal(signal.SIGTERM, on_signal)
         application=tornado.web.Application(handlers,debug=True)
-        application.listen(cfg.port)
-        print("Starting UniSkinServer on port:",cfg.port)
-        sessionManager=server_config.SessionManager()
+        application.listen(cfg["port"])
+        print("Starting UniSkinServer on port:",cfg["port"])
+        tornado.ioloop.PeriodicCallback(check_exit, 100).start()
         tornado.ioloop.IOLoop.instance().start()
     except Exception as e:
         print(e)
         print("Now server quit.")
 
-def parseCommandLine(args):
-    """
-    :type args: list[str]
-    """
-    if args[0] == "-h":
-        print("python UniSkinServer.py [switch] [params ...]")
-        print("   -c [username] [new_password] // force change the password")
-    elif args[0] == "-c":
-        cfg=server_config.getConfigure()
-        db=server_config.DatabaseProvider(cfg.database_path)
-        user_name = args[1]
-        pwd = args[2]
-        if (db.user_exists(user_name)):
-            db.change_pwd(user_name, pwd)
-            print("Password changed")
-        else:
-            print("User not exists.")
-    else:
-        print("Unknown Command. Try -h")
+import uss_config
+from uss_database import uss_database
+import uss_runtime
 
 if __name__=="__main__":
-    if (len(sys.argv) > 1):
-        parseCommandLine(sys.argv[1:])
+    global cfg, db, texture_cache, sessionManager
+    cfg=uss_config.getConfigure()
+    if cfg is None:
+        print("Error Occurred, check your config please.")
     else:
-
-        global cfg,db,texture_cache
-        cfg=server_config.getConfigure()
-        if cfg is None:
-            print("Error Occurred, check your config please.")
-        else:
-            db=server_config.DatabaseProvider(cfg.database_path)
-            texture_cache=server_config.TextureManager(db.get_cursor(),cfg.texture_path)
-            run_server(cfg)
+        db=uss_database(cfg["database_path"])
+        texture_cache=uss_runtime.TextureManager(cfg["texture_path"], db.get_hash_statistics())
+        sessionManager=uss_runtime.SessionManager()
+        run_server()
