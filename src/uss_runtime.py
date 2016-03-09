@@ -1,13 +1,20 @@
 import time
 
 class SessionManager():
-    '''track the accessToken, no interaction with database'''
-    @staticmethod
-    def getUUID():
-        return str(uuid.uuid4()).replace('-','')
-    def __init__(self):
+    '''track the accessToken, no interaction with database
+       session: {
+         'token1': {
+           'time': expire time
+           'name': playername
+         },
+         ...
+       }
+    '''
+
+    def __init__(self, expire_time: int):
         self.__sessions=dict()
-        self.__lastcheck=time.time();
+        self.__lastcheck=time.time()
+        self.expire=expire_time
     def valid(self,token):
         if token in self.__sessions:
             if self.__sessions[token]['time']>time.time():
@@ -24,8 +31,10 @@ class SessionManager():
             self.__lastcheck=time.time()
             for t in [x for x in self.__sessions if self.__sessions[x]['time']<time.time()]:
                 del(self.__sessions[t])
-        uid=getUUID()
-        i={'name':name,'time':time.time()+600}
+        import uuid
+        get_uuid=(lambda: str(uuid.uuid4()).replace('-',''))
+        uid=get_uuid()
+        i={'name':name,'time':time.time()+self.expire}
         self.__sessions[uid]=i
         return uid
     def logout(self,token):
@@ -119,4 +128,5 @@ def UniSkinAPIFormatter(record):
     return json.dumps(data)
 
 def WebDataFormatter(database_record):
-    pass
+    del database_record["password"]
+    return json.dumps(database_record)

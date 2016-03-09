@@ -63,7 +63,7 @@ class uss_database:
         data["password"]=hashed_passwd
         self._set_user(username, data)
 
-    def is_hashed_passwd_match(self, username: str, passwd: str):
+    def is_passwd_match(self, username: str, passwd: str):
         data = self._get_user(username)
         if data is None: return False
         hashed_passwd=pwdhash(username, passwd)
@@ -121,5 +121,17 @@ class uss_database:
             for hash in rec["textures"]["cape_dynamic"]["hashes"]: hash_callback(hash)
             for hash in rec["textures"]["elytra_dynamic"]["hashes"]: hash_callback(hash)
 
+    def scan_user_hash(self, username: str, hash_callback):
+        rec = self._get_user(username)
+        if record is None: return
+        hash_callback(rec["textures"]["skin_default_static"])
+        hash_callback(rec["textures"]["skin_slim_static"])
+        hash_callback(rec["textures"]["cape_static"])
+        hash_callback(rec["textures"]["elytra_static"])
+        for hash in rec["textures"]["skin_default_dynamic"]["hashes"]: hash_callback(hash)
+        for hash in rec["textures"]["skin_slim_dynamic"]["hashes"]: hash_callback(hash)
+        for hash in rec["textures"]["cape_dynamic"]["hashes"]: hash_callback(hash)
+        for hash in rec["textures"]["elytra_dynamic"]["hashes"]: hash_callback(hash)
+        
     def get_formatted(self, username, formatter):
         return formatter(self._get_user(username))

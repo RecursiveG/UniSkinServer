@@ -3,7 +3,8 @@ DEFAULT_CONFIG='''{
     "allow-reg": true,
     "texture-folder": "textures/",
     "database-path": "data.db",
-    "admin-passphrase": ""
+    "admin-passphrase": "",
+    "session-time": 600
 }
 '''
 
