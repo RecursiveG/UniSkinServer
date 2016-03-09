@@ -128,5 +128,6 @@ def UniSkinAPIFormatter(record):
     return json.dumps(data)
 
 def WebDataFormatter(database_record):
+    import json
     del database_record["password"]
     return json.dumps(database_record)

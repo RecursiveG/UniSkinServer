@@ -4,7 +4,8 @@ DEFAULT_CONFIG='''{
     "texture-folder": "textures/",
     "database-path": "data.db",
     "admin-passphrase": "",
-    "session-time": 600
+    "session-time": 600,
+    "max-file-size": 1048576
 }
 '''
 

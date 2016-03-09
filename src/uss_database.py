@@ -81,30 +81,32 @@ class uss_database:
         data["type_preference"][type]=perference
         self._set_user(username, data)
 
-    def set_texture_hash(self, username: str, type: str, is_slim: bool, is_dynamic: bool, hash: str):
+    def set_dynamic_interval(self, username:str, type:str,interval:int):
         data = self._get_user(username)
         if data is None: return
-        key=type
-        if type=="skin":
-            key+="_slim" if is_slim else "_default"
-        key+="_dynamic" if is_dynamic else "_static"
+        data["textures"][type+"_dynamic"]["interval"]=interval
+        self._set_user(username, data)
+
+    def set_texture_hash(self, username: str, type: str, is_dynamic: bool, hash: str):
+        data = self._get_user(username)
+        if data is None: return
+        key=type + ("_dynamic" if is_dynamic else "_static")
         if is_dynamic:
             data['textures'][key]['hashes'].append(hash)
         else:
             data['textures'][key]=hash
         self._set_user(username, data)
 
-    def del_texture_hash(self, username: str, type: str, is_slim: bool, is_dynamic: bool):
+    def del_texture_hash(self, username: str, type: str, is_dynamic: bool, hash_delete_callback):
         data = self._get_user(username)
         if data is None: return
-        key=type
-        if type=="skin":
-            key+="_slim" if is_slim else "_default"
-        key+="_dynamic" if is_dynamic else "_static"
+        key=type + ("_dynamic" if is_dynamic else "_static")
         if is_dynamic:
+            for hash in data['textures'][key]['hashes']: hash_delete_callback(hash)
             data['textures'][key]['hashes']=[]
             data['textures'][key]['interval']=-1
         else:
+            hash_delete_callback(data['textures'][key])
             data['textures'][key]=""
         self._set_user(username, data)
 
@@ -132,6 +134,6 @@ class uss_database:
         for hash in rec["textures"]["skin_slim_dynamic"]["hashes"]: hash_callback(hash)
         for hash in rec["textures"]["cape_dynamic"]["hashes"]: hash_callback(hash)
         for hash in rec["textures"]["elytra_dynamic"]["hashes"]: hash_callback(hash)
-        
+
     def get_formatted(self, username, formatter):
         return formatter(self._get_user(username))

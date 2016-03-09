@@ -48,20 +48,20 @@ This file is not a part of `UniSkinAPI`
 
 ## Set Dynamic Interval: `/dynamic_interval`
     POST: token={}
-          type={skin|cape|elytra}
+          type={skin_slim|skin_default|cape|elytra}
           interval={positive integer}
     RETN: {"errno":0,"msg":"success"}
 
 ## Upload Texture: `/upload_texture`
     POST: token={}
-          model={slim|default|cape|elytra}
+          model={skin_slim|skin_default|cape|elytra}
           type={static|dynamic}
           file={}
     RETN: {"errno":0,"msg":"success"}
 
 ## Delete Texture: `/delete_texture`
     POST: token={}
-          model={slim|default|cape|elytra}
+          model={skin_slim|skin_default|cape|elytra}
           type={static|dynamic}
     RETN: {"errno":0,"msg":"success"}
 
@@ -75,6 +75,7 @@ This file is not a part of `UniSkinAPI`
     6: argument not acceptable
     7: register not allowed
     8: internal server error
+    9: file too large
 
 # Database: `bsddb3`
 
