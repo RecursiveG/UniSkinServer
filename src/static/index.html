@@ -18,7 +18,7 @@
       <div class="panel-body">
         <div class="panel-line">
           <span class="line-start">Login</span>
-          <input type="text" id="loginname" class="line-end" />
+          <input type="text" id="login-name" class="line-end" />
         </div>
         <div class="panel-line">
           <span class="line-start">Password</span>
@@ -32,37 +32,80 @@
       </div>
     </div>
 
-    <div id="info-div" class="panel" style="display: none;">
+    <div id="info-div" class="panel">
       <div class="panel-head">
         <h3 class="panel-title">Basic Information</h3>
       </div>
       <div class="panel-body">
         <div class="panel-line">
           <span class="line-start">Player Name</span>
-          <span class="line-end" id="playername"></span>
+          <span class="line-end" id="player-name"></span>
         </div>
         <div class="panel-line">
           <span class="line-start">Steve Model</span>
-          <span class="line-mid" id="Stevemodel">Not Set</span>
-          <input class="panel-btn line-end" type="button" id="removeSteveModel" value="Remove"/>
-          <input class="panel-btn line-end" type="button" id="uploadSteveModel" value="Upload"/>
+          <span class="line-mid" id="steve-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-steve-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-steve-model" value="Upload"/>
+          <input class="panel-btn line-end" type="button" id="switch-steve-model" value="Switch"/>
         </div>
         <div class="panel-line">
           <span class="line-start">Alex Model</span>
-          <span class="line-mid" id="Alexmodel">Not Set</span>
-          <input class="panel-btn line-end" type="button" id="removeAlexModel" value="Remove"/>
-          <input class="panel-btn line-end" type="button" id="uploadAlexModel" value="Upload"/>
+          <span class="line-mid" id="alex-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-alex-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-alex-model" value="Upload"/>
+          <input class="panel-btn line-end" type="button" id="switch-alex-model" value="Switch"/>
         </div>
         <div class="panel-line">
-          <span class="line-start">Cape</span>
-          <span class="line-mid" id="Capemodel">Not Set</span>
-          <input class="panel-btn line-end" type="button" id="removeCapeModel" value="Remove"/>
-          <input class="panel-btn line-end" type="button" id="uploadCapeModel" value="Upload"/>
+          <span class="line-start">Cape Model</span>
+          <span class="line-mid" id="cape-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-cape-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-cape-model" value="Upload"/>
+          <input class="panel-btn line-end" type="button" id="switch-cape-model" value="Switch"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Elytra Model</span>
+          <span class="line-mid" id="elytra-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-elytra-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-elytra-model" value="Upload"/>
+          <input class="panel-btn line-end" type="button" id="switch-elytra-model" value="Switch"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Steve Dynamic Model</span>
+          <span class="line-mid" id="steve-dynamic-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-steve-dynamic-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-steve-dynamic-model" value="Append"/>
+          <input class="panel-btn line-end" type="button" id="interval-steve-dynamic-model" value="Interval"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Alex Dynamic Model</span>
+          <span class="line-mid" id="alex-dynamic-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-alex-dynamic-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-alex-dynamic-model" value="Append"/>
+          <input class="panel-btn line-end" type="button" id="interval-alex-dynamic-model" value="Interval"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Cape Dynamic Model</span>
+          <span class="line-mid" id="cape-dynamic-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-cape-dynamic-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-cape-dynamic-model" value="Append"/>
+          <input class="panel-btn line-end" type="button" id="interval-cape-dynamic-model" value="Interval"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Elytra Dynamic Model</span>
+          <span class="line-mid" id="elytra-dynamic-model-hash">Not Set</span>
+          <input class="panel-btn line-end" type="button" id="remove-elytra-dynamic-model" value="Remove"/>
+          <input class="panel-btn line-end" type="button" id="upload-elytra-dynamic-model" value="Append"/>
+          <input class="panel-btn line-end" type="button" id="interval-elytra-dynamic-model" value="Interval"/>
         </div>
         <div class="panel-line">
           <span class="line-start">Prefered Model</span>
-          <span class="line-mid" id="preferedmodel">Alex</span>
-          <input class="panel-btn line-end" type="button" id="switchPreferedModel" value="Switch"/>
+          <span class="line-mid" id="prefered-model">Alex</span>
+          <input class="panel-btn line-end" type="button" id="switch-prefered-model" value="Switch"/>
+        </div>
+        <div class="panel-line">
+          <span class="line-start">Prefered Type</span>
+          <span class="line-mid" id="prefered-type">Static</span>
+          <input class="panel-btn line-end" type="button" id="switch-prefered-type" value="Switch"/>
         </div>
       </div>
     </div>
@@ -83,15 +126,15 @@
       <div class="panel-body">
         <div class="panel-line">
           <span class="line-start">Current Password</span>
-          <input type="password" id="currentpwd" class="line-end" />
+          <input type="password" id="current-passwd" class="line-end" />
         </div>
         <div class="panel-line">
           <span class="line-start">New Password</span>
-          <input type="password" id="newpassword" class="line-end" />
+          <input type="password" id="new-passwd" class="line-end" />
         </div>
         <div class="panel-line">
-          <input class="panel-btn" type="button" id="changepasswd" value="Change Password" />
-          <input class="panel-btn" type="button" id="deleteaccount" value="Delete Account" />
+          <input class="panel-btn" type="button" id="change-passwd" value="Change Password" />
+          <input class="panel-btn" type="button" id="delete-account" value="Delete Account" />
           <input class="panel-btn" type="button" id="logout" value="Logout" />
         </div>
         <div class="panel-line">
