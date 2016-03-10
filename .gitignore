@@ -4,3 +4,4 @@ src/runtime
 __pycache__
 src/*.db
 src/*.json
+src/textures

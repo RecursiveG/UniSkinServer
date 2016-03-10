@@ -83,7 +83,7 @@ class WebLoginHandler(RequestHandler):
 class WebLogoutHandler(RequestHandler):
     @capture_post("token")
     @check_token
-    def post(self, token):
+    def post(self, token, name_by_token):
         sessionManager.logout(token)
         self.write('{"errno":0,"msg":""}')
 
@@ -161,7 +161,7 @@ class WebSkinModificationHandler(RequestHandler):
     def post(self,token,name_by_token,model,type):
         if model!="skin_slim" and model!="skin_default" and model!="cape" and model!="elytra":
             return 6, "invalid model"
-        if type!="static" or type!="dynamic":
+        if type!="static" and type!="dynamic":
             return 6, "invalid type"
         import hashlib
         skin_file=self.request.files.get('file')[0]
@@ -182,7 +182,7 @@ class WebSkinDeleteHandler(RequestHandler):
     def post(self,token,name_by_token,model,type):
         if model!="skin_slim" and model!="skin_default" and model!="cape" and model!="elytra":
             return 6, "invalid model"
-        if type!="static" or type!="dynamic":
+        if type!="static" and type!="dynamic":
             return 6, "invalid type"
         db.del_texture_hash(name_by_token, model, type=="dynamic", (lambda x: texture_cache.dec_hash(x)))
         return 0,""

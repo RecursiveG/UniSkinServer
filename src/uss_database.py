@@ -53,8 +53,8 @@ class uss_database:
 
     def delete_user(self, username:str):
         if (not self.has_user(username)): return
-        del db[username.encode("UTF-8")]
-        db.sync();
+        del self.db[username.encode("UTF-8")]
+        self.db.sync();
 
     def change_pwd(self, username: str, passwd: str):
         hashed_passwd=pwdhash(username, passwd)
@@ -78,7 +78,7 @@ class uss_database:
     def set_type_preference(self, username: str, type: str, preference: str):
         data = self._get_user(username)
         if data is None: return
-        data["type_preference"][type]=perference
+        data["type_preference"][type]=preference
         self._set_user(username, data)
 
     def set_dynamic_interval(self, username:str, type:str,interval:int):
@@ -125,7 +125,7 @@ class uss_database:
 
     def scan_user_hash(self, username: str, hash_callback):
         rec = self._get_user(username)
-        if record is None: return
+        if rec is None: return
         hash_callback(rec["textures"]["skin_default_static"])
         hash_callback(rec["textures"]["skin_slim_static"])
         hash_callback(rec["textures"]["cape_static"])

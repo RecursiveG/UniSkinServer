@@ -114,7 +114,7 @@ def UniSkinAPIFormatter(record):
     if good(s): skins["elytra"]=s
 
     good = (lambda x: len(x["hashes"])>0 and x["interval"]>0)
-    join = (lambda x: str(x["interval"]+","+",".join(x["hashed"])))
+    join = (lambda x: str(x["interval"])+","+",".join(x["hashes"]))
     s = record["textures"]["skin_default_dynamic"]
     if good(s): skins["default_dynamic"]=join(s)
     s = record["textures"]["skin_slim_dynamic"]
