@@ -1,5 +1,6 @@
 var session_token="";
 var target_model="";
+var local_data={};
 
 if (typeof String.prototype.endsWith != 'function') {
   String.prototype.endsWith = function(suffix) {
@@ -21,12 +22,63 @@ function fillModelStatus(n1,l,n2){
   }
 }
 
+function fillPair(model, isOff, isDyn, dynHash, staticHash) {
+  if (isOff) {
+    $('#remove-'+model+'-model').hide();
+    $('#upload-'+model+'-model').hide();
+    $('#switch-'+model+'-model').show();
+    $('#'+model+'-model-hash').html('Model off');
+    $('#remove-'+model+'-dynamic-model').hide();
+    $('#upload-'+model+'-dynamic-model').hide();
+    $('#interval-'+model+'-dynamic-model').hide();
+    $('#'+model+'-dynamic-model-hash').html('Model off');
+    return
+  }
+  if (isDyn == true) {
+    $('#remove-'+model+'-model').hide();
+    $('#upload-'+model+'-model').hide();
+    $('#switch-'+model+'-model').show();
+    $('#'+model+'-model-hash').html('Using dynamic skin.');
+
+    $("#upload-"+model+"-dynamic-model").show();
+    if (dynHash == undefined || dynHash.hashes == undefined || dynHash.hashes.length == 0) {
+      $("#"+model+"-dynamic-model-hash").html('Not Uploaded');
+      $("#interval-"+model+"-dynamic-model").hide();
+      $("#remove-"+model+"-dynamic-model").hide();
+    } else {
+      var str = "Interval: "+dynHash.interval;
+      for (var i=0; i< dynHash.hashes.length; i++) {
+        str += '<br/>\n'+dynHash.hashes[i];
+      }
+      $("#"+model+"-dynamic-model-hash").html(str);
+      $("#interval-"+model+"-dynamic-model").show();
+      $("#remove-"+model+"-dynamic-model").show();
+    }
+  } else {
+    $("#upload-"+model+"-dynamic-model").hide();
+    $("#interval-"+model+"-dynamic-model").hide();
+    $("#remove-"+model+"-dynamic-model").hide();
+    $("#"+model+"-dynamic-model-hash").html('Using static skin.');
+
+    $('#switch-'+model+'-model').show();
+    if(staticHash != undefined && staticHash != ""){
+      $('#'+model+'-model-hash').html(staticHash);
+      $('#remove-'+model+'-model').show();
+      $('#upload-'+model+'-model').hide();
+    } else {
+      $('#'+model+'-model-hash').html("Not Uploaded");
+      $('#remove-'+model+'-model').hide();
+      $('#upload-'+model+'-model').show();
+    }
+  }
+}
+
 $(document).ready(function(){
   refresh=(function(){
     $("#login-error").html('');
     $("#mgr-error").html('');
     $.ajax({
-      url: "/data",
+      url: "/userdata",
       type: "POST",
       data: {"token": session_token},
       dataType: "json",
@@ -39,18 +91,20 @@ $(document).ready(function(){
           alert('Failed to refresh data');
           return;
         }
-        $("#playername").html(data.player_name);
-        var p=data.model_preference[0]
-        $("#preferedmodel").html(p=='slim'?"Alex":"Steve");
+        local_data=data;
+        $("#player-name").html(data.username);
 
-        fillModelStatus('slim',data.models,'Alex');
-        fillModelStatus('default',data.models,'Steve');
-        fillModelStatus('cape',data.models,'Cape');
+        fillPair("steve", data.type_preference.skin=="off", data.type_preference.skin=="dynamic", data.textures.skin_default_dynamic, data.textures.skin_default_static)
+        fillPair("alex", data.type_preference.skin=="off", data.type_preference.skin=="dynamic", data.textures.skin_slim_dynamic, data.textures.skin_slim_static)
+        fillPair("cape", data.type_preference.cape=="off", data.type_preference.cape=="dynamic", data.textures.cape_dynamic, data.textures.cape_static)
+        fillPair("elytra", data.type_preference.elytra=="off", data.type_preference.elytra=="dynamic", data.textures.elytra_dynamic, data.textures.elytra_static)
 
-        $('#loginname').val('');
+        $("#prefered-model").html(data.model_preference=='slim'?"Alex":"Steve");
+
+        $('#login-name').val('');
         $('#pwd').val('');
-        $('#currentpwd').val('');
-        $('#newpassword').val('');
+        $('#current-passwd').val('');
+        $('#new-passwd').val('');
         $('#mgr-error').html('');
         $("#login-div").slideUp();
         $("#info-div").slideDown();
@@ -90,10 +144,10 @@ $(document).ready(function(){
 
   $("#regBtn").click(function(){
     $("#login-error").html('');
-    var login=$("#loginname").val();
+    var login=$("#login-name").val();
     var pwd=$("#pwd").val();
     $.ajax({
-      url: "/reg",
+      url: "/register",
       type: "POST",
       data: {
         "login": login,
@@ -105,13 +159,11 @@ $(document).ready(function(){
           $("#login-error").html("Register fail. Please try later.");
           return;
         }
-        var result=data.errno;
-        var _=["Register Success","Login Name Occupied","Invalid Login/Pwd","Server Error","Register not allowed"]
-        if(result==0){
+        if(data.errno==0){
           //console.log("Register Success, ready to login with "+login+"/"+pwd);
           setTimeout(function(){doLogin(login,pwd);},1000);
         }else{
-          $("#login-error").html(_[result]);
+          $("#login-error").html(data.msg);
         }
       })
     });
@@ -119,7 +171,7 @@ $(document).ready(function(){
 
   $("#logBtn").click(function(){
     $("#login-error").html('');
-    var login=$("#loginname").val();
+    var login=$("#login-name").val();
     var pwd=$("#pwd").val();
     doLogin(login,pwd);
   });
@@ -135,40 +187,62 @@ $(document).ready(function(){
         $("#info-div").slideUp();
         $("#manage-div").slideUp();
         $("#img-div").slideUp();
-        $('#loginname').val('');
+        $('#login-name').val('');
         $('#pwd').val('');
       })
     });
   });
 
-  $("#changepasswd").click(function(){
+  $("#change-passwd").click(function(){
     $('#mgr-error').html('');
-    var old_pwd=$("#currentpwd").val();
-    var new_pwd=$("#newpassword").val();
+    var old_pwd=$("#current-passwd").val();
+    var new_pwd=$("#new-passwd").val();
     $.ajax({
-      url: '/update',
+      url: '/chpwd',
       type: "POST",
       data: {
         'token': session_token,
         'new_passwd': new_pwd,
-        'current_passwd': old_pwd
+        'current_passwd': old_pwd,
+        'login': $('#player-name').html()
       },
       dataType: 'json',
       success: (function(a,b){
         if (a.errno==0){
           $('#mgr-error').html('Success');
-        }else if(a.errno==3){
-          $('#mgr-error').html('New pwd too short');
-        }else if(a.errno==1){
-          $('#mgr-error').html('current pwd required');
-        }else if(a.errno==2){
-          $('#mgr-error').html('pwd incorrect');
         }else{
-          $('#mgr-error').html('Profile Update Failed');
+          $('#mgr-error').html(a.msg);
         }
       })
     });
   });
+
+  function set_dynamic_prefer(model) {
+    var t= ""
+    if (local_data.type_preference[model]=="static") t = "dynamic";
+    if (local_data.type_preference[model]=="dynamic") t = "off";
+    if (local_data.type_preference[model]=="off") t = "static";
+    $.ajax({
+      url: '/type_preference',
+      type: "POST",
+      data: {
+        'token': session_token,
+        'type': model,
+        'preference': t,
+      },
+      dataType: 'json',
+      success: (function(a,b){
+        if(a.errno!=0)
+          alert("Error: "+a.msg);
+        else
+          setTimeout(refresh,500);
+      })
+    });
+  }
+  $("#switch-steve-model").click(function(){set_dynamic_prefer("skin")});
+  $("#switch-alex-model").click(function(){set_dynamic_prefer("skin")});
+  $("#switch-cape-model").click(function(){set_dynamic_prefer("cape")});
+  $("#switch-elytra-model").click(function(){set_dynamic_prefer("elytra")});
 
   $(document).on('change','#filechoose',function(e){
     e.preventDefault();
@@ -187,69 +261,111 @@ $(document).ready(function(){
       return;
     }
     $.ajaxFileUpload({
-      url: "/upload",
+      url: "/upload_texture",
       secureurl: false,
       fileElementId: "filechoose",
       data: {
         "token": session_token,
-        "type": m
+        'model': m.model,
+        "type": m.type
       },
       dataType: "json",
       success: function(data,stat){
         //alert(data.msg);
         $('#filechoose').val(null);
         if(data.errno!=0)
-          alert("Error Happened!");
+          alert("Error Happened: "+data.msg);
         else
           setTimeout(refresh,500);
       }
     });
     return false;
   });
-  uploadModel=(function(m){
-    target_model=m
+  uploadModel=(function(model, type){
+    target_model={'model':model, 'type': type};
     $('#filechoose').val(null);
     $('#filechoose').click();
   });
-  $('#uploadAlexModel').click(function(){uploadModel('slim')});
-  $('#uploadSteveModel').click(function(){uploadModel('default')});
-  $('#uploadCapeModel').click(function(){uploadModel('cape')});
+  $('#upload-steve-model').click(function(){uploadModel('skin_default','static')});
+  $('#upload-alex-model').click(function(){uploadModel('skin_slim','static')});
+  $('#upload-cape-model').click(function(){uploadModel('cape','static')});
+  $('#upload-elytra-model').click(function(){uploadModel('elytra','static')});
+  $('#upload-steve-dynamic-model').click(function(){uploadModel('skin_default','dynamic')});
+  $('#upload-alex-dynamic-model').click(function(){uploadModel('skin_slim','dynamic')});
+  $('#upload-cape-dynamic-model').click(function(){uploadModel('cape','dynamic')});
+  $('#upload-elytra-dynamic-model').click(function(){uploadModel('elytra','dynamic')});
 
-  removeModel=(function(modelName){
+  removeModel=(function(model, type){
     //console.log("Model Remove "+modelName);
     var token=$("#token").val()
     $.ajax({
-      url: "/delski",
+      url: "/delete_texture",
       type: "POST",
       data: {
-        "type": modelName,
-        "token": session_token
+        "model": model,
+        "token": session_token,
+        "type": type
       },
-      //dataType: "json",
+      dataType: "json",
       success: function(data,stat){
-        //alert(stat);
-        setTimeout(refresh,500);
+        if (data.errno==0){
+          setTimeout(refresh,500);
+        } else {
+          alert("Error: " +data.msg);
+        }
       }
     });
   });
-  $('#removeAlexModel').click(function(){removeModel('slim')});
-  $('#removeSteveModel').click(function(){removeModel('default')});
-  $('#removeCapeModel').click(function(){removeModel('cape')});
+  $('#remove-steve-model').click(function(){removeModel('skin_default','static')});
+  $('#remove-alex-model').click(function(){removeModel('skin_slim','static')});
+  $('#remove-cape-model').click(function(){removeModel('cape','static')});
+  $('#remove-elytra-model').click(function(){removeModel('elytra','static')});
+  $('#remove-steve-dynamic-model').click(function(){removeModel('skin_default','dynamic')});
+  $('#remove-alex-dynamic-model').click(function(){removeModel('skin_slim','dynamic')});
+  $('#remove-cape-dynamic-model').click(function(){removeModel('cape','dynamic')});
+  $('#remove-elytra-dynamic-model').click(function(){removeModel('elytra','dynamic')});
 
-  $('#switchPreferedModel').click(function(){
-    var x=$('#preferedmodel').html();
+  setInter=(function(model){
+    var token=$("#token").val()
+    var new_interval = prompt("New Interval?");
+    if (new_interval==null) return;
     $.ajax({
-      url: "/update",
+      url: "/dynamic_interval",
       type: "POST",
       data: {
-        "preference": x=="Alex"?"default|slim":"slim|default",
+        "token": session_token,
+        "type": model,
+        "interval": new_interval
+      },
+      dataType: "json",
+      success: function(data,stat){
+        if (data.errno==0){
+          setTimeout(refresh,500);
+        } else {
+          alert("Error: " +data.msg);
+        }
+      }
+    });
+  });
+  $('#interval-steve-dynamic-model').click(function(){setInter('skin_default')});
+  $('#interval-alex-dynamic-model').click(function(){setInter('skin_slim')});
+  $('#interval-cape-dynamic-model').click(function(){setInter('cape')});
+  $('#interval-elytra-dynamic-model').click(function(){setInter('elytra')});
+
+  $('#switch-prefered-model').click(function(){
+    var x=$('#prefered-model').html();
+    $.ajax({
+      url: "/model_preference",
+      type: "POST",
+      data: {
+        "prefered_model": x=="Alex"?"default":"slim",
         "token": session_token
       },
       dataType: "json",
       success: function(data,stat){
         //alert(data.msg);
         if(data.errno!=0)
-          alert("Error Happened!");
+          alert("Error: "+data.msg);
         else
           setTimeout(refresh,500);
       }
@@ -264,15 +380,16 @@ $(document).ready(function(){
     });
   });
 
-  $("#deleteaccount").click(function(){
+  $("#delete-account").click(function(){
     $('#mgr-error').html('');
     if(confirm('Do you really want to delete your account?')){
       $.ajax({
-        url: "/delacc",
+        url: "/delete_account",
         type: "POST",
         data: {
-          "pwd": $("#currentpwd").val(),
-          "token": session_token
+          "current_passwd": $("#current-passwd").val(),
+          "token": session_token,
+          'login': $('#player-name').html()
         },
         dataType: "json",
         success: function(data,stat){
