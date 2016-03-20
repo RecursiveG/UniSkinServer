@@ -71,7 +71,9 @@ And An Example Could Be:
     }
 
 All the fields are optional, and a compatible client should automatically skip
-any missing information
+any missing information.
+
+Compression is recommended.
 
 ## Model Name Convention
 

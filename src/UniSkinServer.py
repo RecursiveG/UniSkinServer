@@ -221,7 +221,7 @@ def run_server():
         on_signal=(lambda sig, frame: tornado.ioloop.IOLoop.instance().add_callback_from_signal(stop_server))
         signal.signal(signal.SIGINT, on_signal)
         signal.signal(signal.SIGTERM, on_signal)
-        application=tornado.web.Application(handlers,debug=True)
+        application=tornado.web.Application(handlers,debug=True,compress_response=True)
         application.listen(cfg["port"])
         print("Starting UniSkinServer on port:",cfg["port"])
         tornado.ioloop.IOLoop.instance().start()
